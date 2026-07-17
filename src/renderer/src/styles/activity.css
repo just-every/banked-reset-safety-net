@@ -1,0 +1,50 @@
+.activity-section,
+.settings-section {
+  margin-top: 14px;
+}
+
+.activity-section {
+  padding: 13px;
+}
+
+.activity-list {
+  margin-top: 9px;
+}
+
+.activity-row {
+  display: flex;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: #b8bdca;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.activity-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: #7c8292;
+}
+
+.activity-row.success .activity-dot {
+  background: #4fd39b;
+}
+
+.activity-row.warning .activity-dot {
+  background: #e2b85d;
+}
+
+.activity-row.error .activity-dot {
+  background: #ef7180;
+}
+
+.activity-row time {
+  display: block;
+  margin-top: 2px;
+  color: #707688;
+  font-size: 9px;
+}

@@ -1,0 +1,39 @@
+.section-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  color: #c7cad4;
+  background: transparent;
+  padding: 12px 13px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.settings-content {
+  display: grid;
+  gap: 10px;
+  padding: 0 13px 13px;
+}
+
+.resolved-path {
+  overflow: hidden;
+  color: #707688;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkbox-row {
+  font-size: 11px;
+}
+
+.safety-note {
+  border-left: 2px solid #665bc8;
+  color: #858b9d;
+  padding-left: 9px;
+  font-size: 9px;
+  line-height: 1.5;
+}

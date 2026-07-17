@@ -1,0 +1,132 @@
+:root {
+  font-family:
+    Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f5f7fb;
+  background: #11131a;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 82% -10%, rgba(112, 101, 255, 0.2), transparent 38%),
+    #11131a;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button,
+input,
+label,
+.scroll-content {
+  -webkit-app-region: no-drag;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #8a80ff;
+  outline-offset: 2px;
+}
+
+input {
+  min-width: 0;
+  border: 1px solid #343847;
+  border-radius: 8px;
+  color: #f5f7fb;
+  background: #1a1d26;
+  padding: 8px 10px;
+}
+
+input::placeholder {
+  color: #6f7485;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h2 {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.loading-screen {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: #959bad;
+  font-size: 13px;
+}
+
+.titlebar {
+  display: flex;
+  height: 68px;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 18px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  -webkit-app-region: drag;
+}
+
+.titlebar h1 {
+  font-size: 15px;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+}
+
+.titlebar p {
+  margin-top: 2px;
+  color: #858b9d;
+  font-size: 11px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(144, 134, 255, 0.42);
+  border-radius: 11px;
+  color: #c9c4ff;
+  background: linear-gradient(145deg, rgba(113, 99, 255, 0.26), rgba(68, 58, 164, 0.08));
+  font-size: 21px;
+}
+
+.scroll-content {
+  height: calc(100vh - 68px);
+  overflow-y: auto;
+  padding: 14px 14px 28px;
+  scrollbar-color: #383c4b transparent;
+  scrollbar-width: thin;
+}
+
+.scroll-content::-webkit-scrollbar {
+  width: 7px;
+}
+
+.scroll-content::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: #383c4b;
+}

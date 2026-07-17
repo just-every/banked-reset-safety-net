@@ -1,0 +1,110 @@
+.hero-card,
+.profile-card,
+.add-profile-form,
+.settings-section,
+.activity-section {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(27, 30, 39, 0.92);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.13);
+}
+
+.hero-card {
+  position: relative;
+  min-height: 133px;
+  overflow: hidden;
+  padding: 17px 18px;
+  background:
+    radial-gradient(circle at 83% 13%, rgba(126, 113, 255, 0.32), transparent 37%),
+    linear-gradient(150deg, #202431, #181b24);
+}
+
+.hero-card::after {
+  position: absolute;
+  right: -34px;
+  bottom: -51px;
+  width: 137px;
+  height: 137px;
+  border: 1px solid rgba(180, 172, 255, 0.12);
+  border-radius: 50%;
+  content: '';
+}
+
+.hero-label {
+  color: #a5aabc;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-countdown {
+  margin-top: 9px;
+  font-size: 31px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 690;
+  letter-spacing: -0.045em;
+}
+
+.hero-empty {
+  margin-top: 14px;
+  font-size: 20px;
+  font-weight: 630;
+}
+
+.hero-detail {
+  max-width: 280px;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #9197a9;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.refresh-button {
+  position: absolute;
+  right: 15px;
+  bottom: 14px;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.refresh-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 104, 119, 0.34);
+  border-radius: 10px;
+  color: #ffc5cc;
+  background: rgba(116, 28, 40, 0.28);
+  padding: 10px 11px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.error-banner button {
+  border: 0;
+  color: #ffc5cc;
+  background: transparent;
+  padding: 0;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}

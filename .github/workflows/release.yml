@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate release metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      package-version: ${{ steps.version.outputs.package-version }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate version tag
+        id: version
+        run: node scripts/release/validate-version-tag.mjs
+
+  macos:
+    name: macOS universal (signed and notarized)
+    needs: validate
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Require Apple signing and notarization credentials
+        run: scripts/release/prepare-macos-credentials.sh
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build signed and notarized universal app
+        run: pnpm dist:mac
+
+      - name: Verify signature, notarization, and packaged apps
+        run: scripts/release/verify-macos-artifacts.sh
+
+      - name: Upload macOS release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos-universal
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            release/Reset-Net-*-mac-universal.dmg
+            release/Reset-Net-*-mac-universal.zip
+            release/SHA256SUMS-macos.txt
+
+  windows:
+    name: Windows ${{ matrix.arch }}
+    needs: validate
+    runs-on: ${{ matrix.arch == 'x64' && 'windows-2025' || 'windows-11-arm' }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x64
+          - arm64
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          architecture: ${{ matrix.arch }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Windows ${{ matrix.arch }} installer
+        run: pnpm dist:win:${{ matrix.arch }}
+
+      - name: Verify Windows installer output
+        shell: pwsh
+        run: scripts/release/verify-windows-artifacts.ps1 -Architecture "${{ matrix.arch }}"
+
+      - name: Upload Windows ${{ matrix.arch }} release asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            release/Reset-Net-*-win-${{ matrix.arch }}.exe
+            release/SHA256SUMS-windows-${{ matrix.arch }}.txt
+
+  publish:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - validate
+      - macos
+      - windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Download verified release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Verify complete asset set and create combined checksums
+        run: scripts/release/prepare-release-assets.sh dist "${{ needs.validate.outputs.package-version }}"
+
+      - name: Publish release
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/Reset-Net-*-mac-universal.dmg \
+            dist/Reset-Net-*-mac-universal.zip \
+            dist/Reset-Net-*-win-x64.exe \
+            dist/Reset-Net-*-win-arm64.exe \
+            dist/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --generate-notes \
+            --title "Reset Net $GITHUB_REF_NAME"

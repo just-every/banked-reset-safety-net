@@ -1,0 +1,13 @@
+node_modules/
+out/
+/release/
+coverage/
+*.log
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+*.p8
+*.p12
+*.cer
+*.certSigningRequest
