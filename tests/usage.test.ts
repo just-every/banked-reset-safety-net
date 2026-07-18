@@ -3,6 +3,7 @@ import {
   buildCreditUsePlans,
   calculateUsagePace,
   displayUsageLimits,
+  formatUsagePaceDifference,
   formatUsagePercent,
   formatUsageWindowDuration,
   selectPlanningLimit
@@ -91,6 +92,10 @@ describe('usage pacing and reset planning', () => {
     expect(formatUsageWindowDuration(10_080)).toBe('1-week')
     expect(formatUsageWindowDuration(300)).toBe('5-hour')
     expect(formatUsagePercent(12.25)).toBe('12.3%')
+    expect(formatUsagePaceDifference(7.23)).toBe('7.2 pts ahead')
+    expect(formatUsagePaceDifference(-6)).toBe('6.0 pts behind')
+    expect(formatUsagePaceDifference(0)).toBe('At ideal pace')
+    expect(formatUsagePaceDifference(null)).toBe('Timing unavailable')
   })
 })
 

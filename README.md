@@ -12,8 +12,9 @@ and ARM64.
 
 ## What it looks like
 
-The status view focuses on one tracked Codex home at a time. Its usage rhythm combines current
-consumption, pace, the next natural reset, and a switcher for every other discovered home.
+The status view focuses on one tracked Codex home at a time. Compact selectable rows keep every
+home visible with its current percentage used, over/on/under-pace state, pace delta, and next
+normal-reset countdown. The active home then gets a large exact countdown before its usage gauge.
 
 <img src="docs/screenshots/usage-rhythm-overview.png" width="720" alt="Banked Reset Safety Net usage rhythm overview">
 
@@ -83,6 +84,7 @@ shows only the standard Codex window, keeping model-specific buckets such as GPT
 the menu-bar view. The rhythm view reports:
 
 - percent used and percent remaining;
+- an at-a-glance status row for every tracked Codex home;
 - the window length supplied by Codex;
 - the exact normal reset time and a live countdown; and
 - a time-based pace status.

@@ -4,6 +4,8 @@ import { formatCompactLocalDateTime } from '../../../shared/time'
 import { buildCreditUsePlans, calculateUsagePace, selectPlanningLimit } from '../../../shared/usage'
 import type { AppViewState, ProfileRuntimeState, ProfileSettings } from '../../../shared/types'
 import { BankedResetList } from './BankedResetList'
+import { NextResetHero } from './NextResetHero'
+import { ProfileStatusRows } from './ProfileStatusRows'
 import { ResetCalendar } from './ResetCalendar'
 import { UsageRhythmGauge } from './UsageRhythmGauge'
 
@@ -48,24 +50,14 @@ export function UsageRhythmDashboard({
           <h2>{selected.profile.name}</h2>
         </div>
         <p>Reset rhythm · normal usage and banked reset timing</p>
-        {pairs.length > 1 ? (
-          <div className="rhythm-profile-tabs" role="tablist" aria-label="Tracked Codex homes">
-            {pairs.map(({ profile, runtime }) => (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={profile.id === selected.profile.id}
-                className={profile.id === selected.profile.id ? 'is-active' : ''}
-                onClick={() => setSelectedId(profile.id)}
-                key={profile.id}
-              >
-                <span className={`profile-state is-${runtime.status}`} />
-                {profile.name}
-              </button>
-            ))}
-          </div>
-        ) : null}
       </header>
+
+      <ProfileStatusRows
+        items={pairs}
+        selectedId={selected.profile.id}
+        now={now}
+        onSelect={setSelectedId}
+      />
 
       <SelectedProfileRhythm pair={selected} now={now} />
     </div>
@@ -94,6 +86,7 @@ function SelectedProfileRhythm({ pair, now }: { pair: ProfilePair; now: number }
 
   return (
     <>
+      <NextResetHero window={usageWindow} now={now} />
       <UsageRhythmGauge window={usageWindow} now={now} />
       <ResetCalendar calendar={calendar} />
       <BankedResetList

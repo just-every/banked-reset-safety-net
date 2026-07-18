@@ -9,7 +9,7 @@
 }
 
 .rhythm-status,
-.rhythm-reset-summary {
+.rhythm-window-summary {
   color: #9096a0;
   font-size: 10px;
   line-height: 1.45;
@@ -93,23 +93,23 @@
   font-size: 10px;
 }
 
-.rhythm-reset-summary {
+.rhythm-window-summary {
   display: grid;
   gap: 4px;
 }
 
-.rhythm-reset-summary > span,
-.rhythm-reset-summary small {
+.rhythm-window-summary > span,
+.rhythm-window-summary small {
   color: #7b828d;
 }
 
-.rhythm-reset-summary strong {
+.rhythm-window-summary strong {
   color: #d7dae0;
   font-size: 12px;
   font-weight: 540;
 }
 
-.rhythm-reset-summary small {
+.rhythm-window-summary small {
   font-size: 8px;
 }
 

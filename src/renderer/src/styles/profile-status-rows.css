@@ -1,0 +1,126 @@
+.profile-status-rows {
+  display: grid;
+  gap: 5px;
+  margin-top: 15px;
+}
+
+.profile-status-row {
+  display: grid;
+  grid-template-columns: minmax(145px, 1.35fr) 72px minmax(120px, 1fr) 108px 12px;
+  min-height: 42px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid #272d36;
+  border-radius: 8px;
+  color: #8f96a1;
+  background: rgba(17, 21, 28, 0.62);
+  padding: 7px 11px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.profile-status-row:hover {
+  border-color: #39414c;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.profile-status-row.is-selected {
+  border-color: #596273;
+  color: #dfe2e8;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 2px 0 #8a80ff;
+}
+
+.profile-status-identity,
+.profile-status-usage,
+.profile-status-pace,
+.profile-status-reset {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.profile-status-identity {
+  align-items: center;
+}
+
+.profile-status-identity strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-status-identity small {
+  border-radius: 99px;
+  color: #bcb6ff;
+  background: rgba(138, 128, 255, 0.13);
+  padding: 2px 5px;
+  font-size: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.profile-status-usage strong,
+.profile-status-pace strong,
+.profile-status-reset strong {
+  color: #d9dce2;
+  font-size: 9px;
+  font-weight: 560;
+  white-space: nowrap;
+}
+
+.profile-status-row small {
+  color: #737a85;
+  font-size: 7px;
+  white-space: nowrap;
+}
+
+.profile-status-pace {
+  display: grid;
+  gap: 2px;
+}
+
+.profile-status-pace.is-over strong {
+  color: #e5a16b;
+}
+
+.profile-status-pace.is-under strong {
+  color: #8caee8;
+}
+
+.profile-status-pace.is-on-pace strong {
+  color: #77c99e;
+}
+
+.profile-status-reset {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+}
+
+.profile-status-unavailable {
+  grid-column: 2 / 5;
+  color: #757c87;
+  font-size: 8px;
+}
+
+.profile-status-unavailable.is-error {
+  color: #d87680;
+}
+
+.profile-status-chevron {
+  color: #5e6570;
+  font-size: 13px;
+  text-align: right;
+}
+
+.profile-status-row.is-selected .profile-status-chevron {
+  color: #aba4ff;
+}

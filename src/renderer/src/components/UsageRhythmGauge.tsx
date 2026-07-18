@@ -1,7 +1,7 @@
-import { formatCountdown, formatLocalDateTime } from '../../../shared/time'
 import {
   calculateUsagePace,
   formatUsagePercent,
+  formatUsageWindowDuration,
   usagePaceLabel
 } from '../../../shared/usage'
 import type { UsageWindow } from '../../../shared/types'
@@ -52,16 +52,10 @@ export function UsageRhythmGauge({ window, now }: UsageRhythmGaugeProps): React.
         </div>
       </div>
 
-      <div className="rhythm-reset-summary">
-        <span>Normal reset</span>
-        {window.resetsAt ? (
-          <>
-            <strong>{formatCountdown(window.resetsAt, now)}</strong>
-            <small>{formatLocalDateTime(window.resetsAt)}</small>
-          </>
-        ) : (
-          <strong>Time unavailable</strong>
-        )}
+      <div className="rhythm-window-summary">
+        <span>Usage available</span>
+        <strong>{formatUsagePercent(pace.remainingPercent)} left</strong>
+        <small>{formatUsageWindowDuration(window.windowDurationMinutes)} window</small>
       </div>
 
       <div className="rhythm-scale">

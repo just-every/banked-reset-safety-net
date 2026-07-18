@@ -122,6 +122,14 @@ export function formatUsagePercent(value: number): string {
   return `${Number.isInteger(value) ? value : value.toFixed(1)}%`
 }
 
+export function formatUsagePaceDifference(differencePercentagePoints: number | null): string {
+  if (differencePercentagePoints === null) return 'Timing unavailable'
+
+  const points = Math.abs(differencePercentagePoints)
+  if (points < 0.05) return 'At ideal pace'
+  return `${points.toFixed(1)} pts ${differencePercentagePoints > 0 ? 'ahead' : 'behind'}`
+}
+
 export function usagePaceLabel(status: UsagePaceStatus): string {
   if (status === 'over') return 'Over pace'
   if (status === 'under') return 'Under pace'

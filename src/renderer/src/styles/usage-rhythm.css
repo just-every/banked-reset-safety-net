@@ -79,40 +79,6 @@
   opacity: 0.55;
 }
 
-.rhythm-profile-tabs {
-  display: flex;
-  max-width: 100%;
-  gap: 4px;
-  margin-top: 14px;
-  overflow-x: auto;
-  padding: 2px;
-  scrollbar-width: none;
-}
-
-.rhythm-profile-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.rhythm-profile-tabs button {
-  display: inline-flex;
-  min-width: max-content;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid transparent;
-  border-radius: 99px;
-  color: #767d88;
-  background: transparent;
-  padding: 5px 10px;
-  font-size: 8px;
-  cursor: pointer;
-}
-
-.rhythm-profile-tabs button.is-active {
-  border-color: #373e49;
-  color: #d8dbe1;
-  background: rgba(255, 255, 255, 0.04);
-}
-
 .profile-state {
   width: 5px;
   height: 5px;

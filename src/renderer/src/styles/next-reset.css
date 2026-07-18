@@ -1,0 +1,98 @@
+.next-reset-hero {
+  display: grid;
+  justify-items: center;
+  margin: 18px 0 2px;
+  border: 1px solid #2b323c;
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(138, 128, 255, 0.12), transparent 58%),
+    rgba(14, 18, 24, 0.74);
+  padding: 17px 20px 14px;
+  text-align: center;
+}
+
+.next-reset-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #9197a2;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.next-reset-clock {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #9197a2;
+  border-radius: 50%;
+}
+
+.next-reset-clock::before,
+.next-reset-clock::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  background: #9197a2;
+  transform-origin: bottom;
+  content: '';
+}
+
+.next-reset-clock::before {
+  height: 3px;
+  transform: translate(-50%, -100%);
+}
+
+.next-reset-clock::after {
+  height: 3px;
+  transform: translate(-50%, -100%) rotate(125deg);
+}
+
+.next-reset-countdown {
+  margin-top: 6px;
+  color: #f1f2f5;
+  font-size: 30px;
+  font-weight: 360;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.next-reset-countdown.is-unavailable {
+  font-size: 18px;
+}
+
+.next-reset-hero time {
+  margin-top: 3px;
+  color: #8b919c;
+  font-size: 8px;
+}
+
+.next-reset-context {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  color: #7d8490;
+  font-size: 7px;
+}
+
+.next-reset-context span + span::before {
+  margin-right: 7px;
+  color: #444b55;
+  content: '•';
+}
+
+.next-reset-context .is-on-pace {
+  color: #77c99e;
+}
+
+.next-reset-context .is-over {
+  color: #e5a16b;
+}
+
+.next-reset-context .is-under {
+  color: #8caee8;
+}

@@ -2,6 +2,8 @@
 @import './styles/surfaces.css';
 @import './styles/profiles.css';
 @import './styles/usage-rhythm.css';
+@import './styles/profile-status-rows.css';
+@import './styles/next-reset.css';
 @import './styles/rhythm-gauge.css';
 @import './styles/reset-calendar.css';
 @import './styles/banked-reset-list.css';
