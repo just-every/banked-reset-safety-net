@@ -1,6 +1,10 @@
 # Releasing Reset Net
 
-The release workflow builds three platform targets in parallel: a universal macOS app, a Windows x64 installer, and a Windows ARM64 installer. A GitHub release is published only after every target succeeds and the macOS app passes Developer ID signature, Gatekeeper, and notarization-ticket checks.
+The release workflow builds three platform targets in parallel: a universal macOS app, a Windows
+x64 installer, and a Windows ARM64 installer. A GitHub release is published only after every target
+succeeds and the macOS app passes Developer ID signature, Gatekeeper, and notarization-ticket
+checks. Each platform job also produces the update metadata and blockmaps consumed by the installed
+app.
 
 Manual workflow runs build, assemble, checksum, and retain the complete release bundle for inspection. They do not publish a release unless the selected ref is a version tag.
 
@@ -53,7 +57,11 @@ The macOS verification step checks the unpacked app, the app mounted from the DM
 - pass Gatekeeper assessment; and
 - contain a valid stapled notarization ticket.
 
-The Windows jobs build x64 and ARM64 targets independently on parallel, native-architecture GitHub-hosted runners. Windows artifacts are not Authenticode-signed until a Windows code-signing certificate is added to the project, so users may see a Microsoft SmartScreen warning.
+The Windows jobs build x64 and ARM64 targets independently on parallel, native-architecture
+GitHub-hosted runners. x64 publishes `latest.yml`; ARM64 embeds the `latest-arm64` channel and
+publishes `latest-arm64.yml`. This split is required because both installers share one GitHub
+release. Windows artifacts are not Authenticode-signed until a Windows code-signing certificate is
+added to the project, so users may see a Microsoft SmartScreen warning.
 
 ## Publish a release
 
@@ -67,6 +75,15 @@ git tag -a "v${release_version}" -m "Reset Net v${release_version}"
 git push origin "v${release_version}"
 ```
 
-The workflow rejects a tag that does not exactly equal `v` followed by the `package.json` version. Once the signed/notarized macOS job and both Windows jobs pass, it publishes one GitHub release with the DMG, ZIP, both Windows installers, generated release notes, and a combined `SHA256SUMS.txt` file. Manifest entries are bare filenames, so verification runs from the directory containing the downloaded assets.
+The workflow rejects a tag that does not exactly equal `v` followed by the `package.json` version.
+Once the signed/notarized macOS job and both Windows jobs pass, it publishes one GitHub release with
+the DMG, ZIP, both Windows installers, updater blockmaps and channel files, generated release notes,
+and a combined `SHA256SUMS.txt` file. The release bundle verifier checks that each channel file
+contains the release version and the correct architecture-specific artifact name. Manifest entries
+are bare filenames, so verification runs from the directory containing the downloaded assets.
+
+The primary download filenames intentionally omit the version. This keeps the README's
+`releases/latest/download/...` links stable across releases. The Git tag, release title, app bundle,
+and updater metadata retain the exact semantic version.
 
 If a build or verification step fails, fix the cause before publishing. Do not bypass the signature, Gatekeeper, notarization, artifact-count, or checksum checks.

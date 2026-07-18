@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react'
 import type {
-  ProfileRuntimeState,
   ProfileSettings,
   UpdateProfileInput
 } from '../../../shared/types'
 import { MAX_LEAD_TIME_MINUTES } from '../../../shared/types'
 import { formatHomePathForDisplay } from '../../../shared/pathDisplay'
-import { ProfileRuntime } from './ProfileRuntime'
 
 interface ProfileCardProps {
   profile: ProfileSettings
-  runtime: ProfileRuntimeState
-  now: number
   run(action: () => Promise<void>): Promise<void>
 }
 
-export function ProfileCard({ profile, runtime, now, run }: ProfileCardProps): React.JSX.Element {
+export function ProfileCard({ profile, run }: ProfileCardProps): React.JSX.Element {
   const [leadTime, setLeadTime] = useState(String(profile.leadTimeMinutes))
   useEffect(() => setLeadTime(String(profile.leadTimeMinutes)), [profile.leadTimeMinutes])
 
@@ -93,13 +89,6 @@ export function ProfileCard({ profile, runtime, now, run }: ProfileCardProps): R
           />
         </label>
       </div>
-
-      <ProfileRuntime
-        runtime={runtime}
-        now={now}
-        leadTimeMinutes={profile.leadTimeMinutes}
-        autoRedeemEnabled={profile.autoRedeemEnabled}
-      />
 
       <div className="automation-row">
         <label className="switch-label automatic-switch">

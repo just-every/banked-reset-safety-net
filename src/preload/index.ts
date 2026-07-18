@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS, type ResetNetBridge } from '../shared/ipc'
-import type { AppViewState } from '../shared/types'
+import type { AppViewState, UpdateViewState } from '../shared/types'
 
 const bridge: ResetNetBridge = {
   getState: () => ipcRenderer.invoke(IPC_CHANNELS.getState) as Promise<AppViewState>,
@@ -16,11 +16,23 @@ const bridge: ResetNetBridge = {
     ipcRenderer.invoke(IPC_CHANNELS.chooseCodexHome) as Promise<string | null>,
   chooseCodexExecutable: () =>
     ipcRenderer.invoke(IPC_CHANNELS.chooseCodexExecutable) as Promise<string | null>,
+  discoverCodexHomes: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.discoverCodexHomes) as Promise<number>,
+  getUpdateState: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.getUpdateState) as Promise<UpdateViewState>,
+  checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.checkForUpdates) as Promise<void>,
+  installUpdate: () => ipcRenderer.invoke(IPC_CHANNELS.installUpdate) as Promise<void>,
   quit: () => ipcRenderer.invoke(IPC_CHANNELS.quit) as Promise<void>,
   onStateChanged: (listener) => {
     const handler = (_event: Electron.IpcRendererEvent, state: AppViewState): void => listener(state)
     ipcRenderer.on(IPC_CHANNELS.stateChanged, handler)
     return () => ipcRenderer.removeListener(IPC_CHANNELS.stateChanged, handler)
+  },
+  onUpdateStateChanged: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, state: UpdateViewState): void =>
+      listener(state)
+    ipcRenderer.on(IPC_CHANNELS.updateStateChanged, handler)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.updateStateChanged, handler)
   }
 }
 

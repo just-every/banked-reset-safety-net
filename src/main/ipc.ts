@@ -6,8 +6,13 @@ import type {
   UpdateProfileInput
 } from '../shared/types'
 import type { ResetController } from './resetController'
+import type { UpdateManager } from './update/updateManager'
 
-export function registerIpcHandlers(controller: ResetController): () => void {
+export function registerIpcHandlers(
+  controller: ResetController,
+  updateManager: UpdateManager,
+  installUpdate: () => Promise<void>
+): () => void {
   ipcMain.handle(IPC_CHANNELS.getState, () => controller.getState())
   ipcMain.handle(IPC_CHANNELS.refresh, () => controller.refresh())
   ipcMain.handle(IPC_CHANNELS.addProfile, (_event, value: unknown) =>
@@ -38,11 +43,17 @@ export function registerIpcHandlers(controller: ResetController): () => void {
     })
     return result.canceled ? null : (result.filePaths[0] ?? null)
   })
+  ipcMain.handle(IPC_CHANNELS.discoverCodexHomes, () => controller.discoverCodexHomes())
+  ipcMain.handle(IPC_CHANNELS.getUpdateState, () => updateManager.getState())
+  ipcMain.handle(IPC_CHANNELS.checkForUpdates, () => updateManager.check())
+  ipcMain.handle(IPC_CHANNELS.installUpdate, installUpdate)
   ipcMain.handle(IPC_CHANNELS.quit, () => app.quit())
 
   return () => {
     for (const channel of Object.values(IPC_CHANNELS)) {
-      if (channel !== IPC_CHANNELS.stateChanged) ipcMain.removeHandler(channel)
+      if (channel !== IPC_CHANNELS.stateChanged && channel !== IPC_CHANNELS.updateStateChanged) {
+        ipcMain.removeHandler(channel)
+      }
     }
   }
 }

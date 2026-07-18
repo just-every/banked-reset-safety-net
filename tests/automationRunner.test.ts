@@ -191,6 +191,7 @@ function testSettings(home: string): AppSettings {
     version: SETTINGS_VERSION,
     codexExecutable: '',
     launchAtLogin: false,
+    ignoredCodexHomes: [],
     profiles: [
       {
         id: 'profile-1',

@@ -4,6 +4,8 @@ Reset Net is a cross-platform tray/menu-bar app for Codex usage windows and bank
 resets. It shows how much normal usage remains, when each normal window resets, whether current use
 is ahead of or behind a time-based pace, and when every banked reset should be used before expiry.
 
+**Download latest:** [macOS universal DMG](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Reset-Net-mac-universal.dmg) · [Windows x64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Reset-Net-win-x64.exe) · [Windows ARM64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Reset-Net-win-arm64.exe) · [all release files](https://github.com/just-every/banked-reset-safety-net/releases/latest)
+
 The macOS version runs in the menu bar. The same Electron application is packaged for Windows x64
 and ARM64.
 
@@ -12,15 +14,21 @@ and ARM64.
 The top status card summarizes every usage line across every tracked Codex home. Each profile then
 shows its normal usage bars and banked-reset plan.
 
-![Reset Net usage overview](docs/screenshots/reset-net-overview.png)
+<img src="docs/screenshots/reset-net-overview.png" width="420" alt="Reset Net usage overview">
 
 Every banked reset has its own timeline. Grey lines are normal usage resets, the purple point is the
 best or latest suggested use, and the red line is the banked reset's final expiry.
 
-![Reset Net reset planner](docs/screenshots/reset-net-planner.png)
+<img src="docs/screenshots/reset-net-planner.png" width="420" alt="Reset Net reset planner">
 
-These screenshots use live, read-only Codex data from a clean first-run configuration tracking only
-`~/.codex`. Automatic use is off and the lead time is the default 30 minutes.
+Status and configuration now live on separate tabs, keeping normal usage and reset planning focused
+while all automation controls remain together in Settings.
+
+<img src="docs/screenshots/reset-net-settings.png" width="420" alt="Reset Net Settings tab">
+
+These 2x PNG screenshots use live, read-only Codex data from an isolated first-run configuration.
+Automatic use is off for every automatically discovered home and the lead time is the default 30
+minutes. No reset-consumption request was made while capturing them.
 
 ## Install
 
@@ -43,9 +51,10 @@ window; right-click for Refresh and Quit.
 ## First run
 
 1. Reset Net looks for the Codex CLI in common npm, Homebrew, ChatGPT app, and `PATH` locations.
-2. It initially tracks `~/.codex` if that directory exists. Inherited `CODEX_HOME` values do not
-   change the desktop app's default.
-3. Use **Track another Codex home** for additional accounts or environments.
+2. It scans your user folder for `~/.codex` and sibling `.codex_*` or `.codex-*` directories.
+   Inherited `CODEX_HOME` values do not change the desktop app's default.
+3. Use **Scan now** after creating another Codex home, or **Track another Codex home** for a path
+   elsewhere. A home you explicitly remove stays ignored by future automatic scans.
 4. Leave **Use automatically** off if you only want usage and reset planning.
 5. To automate a home, set the lead time (30 minutes by default), enable **Use automatically**, and
    accept the explicit confirmation.
@@ -54,6 +63,16 @@ window; right-click for Refresh and Quit.
 
 Every new profile starts with automatic use disabled. Changing a profile's `CODEX_HOME` also forces
 automatic use off.
+
+## Automatic app updates
+
+Installed macOS and Windows builds check the latest public GitHub release shortly after startup and
+every four hours while running. A newer release downloads in the background. Reset Net shows the
+download state in **Settings → App updates**, sends a notification when the signed package is ready,
+and installs it when the app next quits. **Restart and install** applies it immediately.
+
+Development builds never contact the update feed. macOS updates use the signed universal ZIP;
+Windows x64 and ARM64 have separate feeds and installers so an update cannot cross architectures.
 
 ## Normal usage and pacing
 

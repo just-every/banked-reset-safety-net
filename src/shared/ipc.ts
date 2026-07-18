@@ -2,7 +2,8 @@ import type {
   AddProfileInput,
   AppViewState,
   UpdateAppSettingsInput,
-  UpdateProfileInput
+  UpdateProfileInput,
+  UpdateViewState
 } from './types'
 
 export const IPC_CHANNELS = {
@@ -15,6 +16,11 @@ export const IPC_CHANNELS = {
   updateSettings: 'reset-net:update-settings',
   chooseCodexHome: 'reset-net:choose-codex-home',
   chooseCodexExecutable: 'reset-net:choose-codex-executable',
+  discoverCodexHomes: 'reset-net:discover-codex-homes',
+  getUpdateState: 'reset-net:get-update-state',
+  updateStateChanged: 'reset-net:update-state-changed',
+  checkForUpdates: 'reset-net:check-for-updates',
+  installUpdate: 'reset-net:install-update',
   quit: 'reset-net:quit'
 } as const
 
@@ -27,6 +33,11 @@ export interface ResetNetBridge {
   updateSettings(input: UpdateAppSettingsInput): Promise<void>
   chooseCodexHome(): Promise<string | null>
   chooseCodexExecutable(): Promise<string | null>
+  discoverCodexHomes(): Promise<number>
+  getUpdateState(): Promise<UpdateViewState>
+  checkForUpdates(): Promise<void>
+  installUpdate(): Promise<void>
   quit(): Promise<void>
   onStateChanged(listener: (state: AppViewState) => void): () => void
+  onUpdateStateChanged(listener: (state: UpdateViewState) => void): () => void
 }

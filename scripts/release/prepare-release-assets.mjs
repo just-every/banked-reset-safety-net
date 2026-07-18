@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
-import { stat, writeFile } from 'node:fs/promises'
+import { readFile, stat, writeFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -10,10 +10,16 @@ export async function prepareReleaseAssets(distributionDirectory, version) {
   }
 
   const artifacts = [
-    `Reset-Net-${version}-mac-universal.dmg`,
-    `Reset-Net-${version}-mac-universal.zip`,
-    `Reset-Net-${version}-win-x64.exe`,
-    `Reset-Net-${version}-win-arm64.exe`
+    'Reset-Net-mac-universal.dmg',
+    'Reset-Net-mac-universal.zip',
+    'Reset-Net-mac-universal.zip.blockmap',
+    'Reset-Net-win-x64.exe',
+    'Reset-Net-win-x64.exe.blockmap',
+    'Reset-Net-win-arm64.exe',
+    'Reset-Net-win-arm64.exe.blockmap',
+    'latest-mac.yml',
+    'latest.yml',
+    'latest-arm64.yml'
   ].map((name) => join(distributionDirectory, name))
 
   await Promise.all(
@@ -24,6 +30,23 @@ export async function prepareReleaseAssets(distributionDirectory, version) {
       }
     })
   )
+  await Promise.all([
+    validateUpdateMetadata(
+      join(distributionDirectory, 'latest-mac.yml'),
+      version,
+      'Reset-Net-mac-universal.zip'
+    ),
+    validateUpdateMetadata(
+      join(distributionDirectory, 'latest.yml'),
+      version,
+      'Reset-Net-win-x64.exe'
+    ),
+    validateUpdateMetadata(
+      join(distributionDirectory, 'latest-arm64.yml'),
+      version,
+      'Reset-Net-win-arm64.exe'
+    )
+  ])
 
   const hashes = await Promise.all(artifacts.map(hashFile))
   const manifest = artifacts
@@ -31,6 +54,13 @@ export async function prepareReleaseAssets(distributionDirectory, version) {
     .join('\n')
 
   await writeFile(join(distributionDirectory, 'SHA256SUMS.txt'), `${manifest}\n`, 'utf8')
+}
+
+async function validateUpdateMetadata(file, version, artifactName) {
+  const content = await readFile(file, 'utf8')
+  if (!content.includes(`version: ${version}`) || !content.includes(artifactName)) {
+    throw new Error(`Update metadata does not target version ${version} and ${artifactName}: ${file}`)
+  }
 }
 
 async function hashFile(file) {

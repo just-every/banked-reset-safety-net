@@ -3,6 +3,10 @@
   margin-top: 14px;
 }
 
+.settings-page .activity-section {
+  margin-top: 0;
+}
+
 .activity-section {
   padding: 13px;
 }

@@ -1,6 +1,6 @@
 {
   "name": "banked-reset-net",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A cross-platform tray app for tracking and safely using Codex banked resets before they expire.",
   "author": "Reset Net contributors",
   "repository": {
@@ -22,11 +22,12 @@
     "dist:mac:arm64": "pnpm prepare:icons && pnpm build && electron-builder --mac --arm64 --publish never",
     "dist:win": "pnpm prepare:icons && pnpm build && electron-builder --win --publish never",
     "dist:win:x64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --x64 --publish never",
-    "dist:win:arm64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --arm64 --publish never",
+    "dist:win:arm64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --arm64 --config.publish.channel=latest-arm64 --publish never",
     "probe": "tsx scripts/probe.ts"
   },
   "dependencies": {
     "cross-spawn": "7.0.6",
+    "electron-updater": "6.8.9",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
@@ -56,9 +57,15 @@
   "build": {
     "appId": "net.bankedreset.app",
     "productName": "Reset Net",
-    "artifactName": "Reset-Net-${version}-${os}-${arch}.${ext}",
+    "artifactName": "Reset-Net-${os}-${arch}.${ext}",
     "directories": {
       "output": "release"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "just-every",
+      "repo": "banked-reset-safety-net",
+      "channel": "latest"
     },
     "files": [
       "out/**/*",

@@ -7,7 +7,6 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ state, run }: SettingsPanelProps): React.JSX.Element {
-  const [open, setOpen] = useState(false)
   const [executable, setExecutable] = useState(state.settings.codexExecutable)
   useEffect(() => setExecutable(state.settings.codexExecutable), [state.settings.codexExecutable])
 
@@ -25,13 +24,14 @@ export function SettingsPanel({ state, run }: SettingsPanelProps): React.JSX.Ele
   }
 
   return (
-    <section className="settings-section">
-      <button className="section-toggle" type="button" onClick={() => setOpen((value) => !value)}>
-        <span>Settings & safety</span>
-        <span>{open ? '−' : '+'}</span>
-      </button>
-      {open ? (
-        <div className="settings-content">
+    <section className="settings-card">
+      <div className="settings-card-heading">
+        <div>
+          <h2>App settings</h2>
+          <p>CLI detection, startup, and safety information.</p>
+        </div>
+      </div>
+      <div className="settings-content">
           <label>
             <span>Codex executable</span>
             <div className="path-input-row">
@@ -81,8 +81,7 @@ export function SettingsPanel({ state, run }: SettingsPanelProps): React.JSX.Ele
           <button type="button" className="text-button danger" onClick={() => void window.resetNet.quit()}>
             Quit Reset Net
           </button>
-        </div>
-      ) : null}
+      </div>
     </section>
   )
 }

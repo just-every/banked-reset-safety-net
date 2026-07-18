@@ -22,16 +22,36 @@ export function parseSettings(value: unknown): AppSettings {
   if (!Array.isArray(input.profiles)) {
     throw new Error('settings.profiles must be an array.')
   }
+  if (!Array.isArray(input.ignoredCodexHomes)) {
+    throw new Error('settings.ignoredCodexHomes must be an array.')
+  }
 
   const profiles = input.profiles.map((profile, index) => parseProfile(profile, index))
+  const ignoredCodexHomes = input.ignoredCodexHomes.map((home, index) => {
+    if (typeof home !== 'string') {
+      throw new Error(`settings.ignoredCodexHomes[${index}] must be a string.`)
+    }
+    return normalizeCodexHome(home)
+  })
   assertUniqueHomes(profiles)
 
   return {
     version: SETTINGS_VERSION,
     codexExecutable: input.codexExecutable.trim(),
     launchAtLogin: input.launchAtLogin,
+    ignoredCodexHomes: uniquePaths(ignoredCodexHomes),
     profiles
   }
+}
+
+function uniquePaths(paths: string[]): string[] {
+  const seen = new Set<string>()
+  return paths.filter((candidate) => {
+    const key = comparablePath(candidate)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 export function normalizeProfileName(value: string): string {

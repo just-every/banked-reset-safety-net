@@ -52,6 +52,39 @@
   font-weight: 650;
 }
 
+.dashboard-profile .profile-heading h3 {
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.tracking-badge {
+  flex: 0 0 auto;
+  border-radius: 99px;
+  color: #858b9b;
+  background: rgba(134, 141, 158, 0.12);
+  padding: 3px 7px;
+  font-size: 8px;
+  font-weight: 680;
+}
+
+.tracking-badge.is-active {
+  color: #9ce1c4;
+  background: rgba(58, 165, 119, 0.14);
+}
+
+.settings-profile-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 9px;
+}
+
+.settings-profile-list .profile-card {
+  margin: 0;
+  border-radius: 11px;
+  background: rgba(12, 14, 19, 0.25);
+  box-shadow: none;
+}
+
 .profile-name:hover,
 .profile-name:focus {
   background: rgba(255, 255, 255, 0.04);

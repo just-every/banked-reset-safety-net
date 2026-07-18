@@ -20,7 +20,9 @@ describe('release asset manifest', () => {
     const artifacts = artifactNames(version)
 
     await Promise.all(
-      artifacts.map((name, index) => writeFile(join(directory, name), `artifact-${index}`))
+      artifacts.map((name, index) =>
+        writeFile(join(directory, name), artifactContent(name, index, version))
+      )
     )
     await prepareReleaseAssets(directory, version)
 
@@ -29,7 +31,9 @@ describe('release asset manifest', () => {
 
     expect(lines).toHaveLength(artifacts.length)
     expect(lines).toEqual(
-      artifacts.map((name, index) => `${sha256(`artifact-${index}`)}  ${basename(name)}`)
+      artifacts.map((name, index) =>
+        `${sha256(artifactContent(name, index, version))}  ${basename(name)}`
+      )
     )
     expect(lines.every((line) => !line.includes('  dist/'))).toBe(true)
   })
@@ -50,14 +54,31 @@ async function createTemporaryDirectory(): Promise<string> {
 }
 
 function artifactNames(version: string): string[] {
+  void version
   return [
-    `Reset-Net-${version}-mac-universal.dmg`,
-    `Reset-Net-${version}-mac-universal.zip`,
-    `Reset-Net-${version}-win-x64.exe`,
-    `Reset-Net-${version}-win-arm64.exe`
+    'Reset-Net-mac-universal.dmg',
+    'Reset-Net-mac-universal.zip',
+    'Reset-Net-mac-universal.zip.blockmap',
+    'Reset-Net-win-x64.exe',
+    'Reset-Net-win-x64.exe.blockmap',
+    'Reset-Net-win-arm64.exe',
+    'Reset-Net-win-arm64.exe.blockmap',
+    'latest-mac.yml',
+    'latest.yml',
+    'latest-arm64.yml'
   ]
 }
 
 function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex')
+}
+
+function artifactContent(name: string, index: number, version: string): string {
+  const updateTargets: Record<string, string> = {
+    'latest-mac.yml': 'Reset-Net-mac-universal.zip',
+    'latest.yml': 'Reset-Net-win-x64.exe',
+    'latest-arm64.yml': 'Reset-Net-win-arm64.exe'
+  }
+  const target = updateTargets[name]
+  return target ? `version: ${version}\npath: ${target}\n` : `artifact-${index}`
 }

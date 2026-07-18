@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { app, dialog, Notification } from 'electron'
+import updaterPackage from 'electron-updater'
 import { IPC_CHANNELS } from '../shared/ipc'
 import { AutomationLedger } from './automation/automationLedger'
 import { RedemptionLock } from './automation/redemptionLock'
@@ -8,9 +9,12 @@ import { ResetController } from './resetController'
 import { SettingsStore } from './settings/settingsStore'
 import { TrayController } from './ui/trayController'
 import { TrayWindow } from './ui/trayWindow'
+import { installedUpdater, UpdateManager } from './update/updateManager'
 
 app.setName('Reset Net')
 app.setAppUserModelId('net.bankedreset.app')
+
+const { autoUpdater } = updaterPackage
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock()
 if (!hasSingleInstanceLock) app.quit()
@@ -39,6 +43,18 @@ async function startApplication(): Promise<void> {
       }
     }
   })
+  const updateManager = new UpdateManager({
+    updater: installedUpdater(app.isPackaged, process.platform, autoUpdater),
+    currentVersion: app.getVersion(),
+    notifyReady: (version) => {
+      if (Notification.isSupported()) {
+        new Notification({
+          title: 'Reset Net update ready',
+          body: `Version ${version} will install when you restart Reset Net.`
+        }).show()
+      }
+    }
+  })
 
   try {
     await controller.initialize()
@@ -54,30 +70,46 @@ async function startApplication(): Promise<void> {
     () => void controller.refresh().catch((error) => console.error(error)),
     () => app.quit()
   )
-  const unregisterIpc = registerIpcHandlers(controller)
+  let shutdownPromise: Promise<void> | null = null
+  let shutdownComplete = false
+  const shutdown = (): Promise<void> => {
+    if (shutdownPromise) return shutdownPromise
+    trayWindow.prepareToQuit()
+    unsubscribe()
+    unsubscribeUpdates()
+    unregisterIpc()
+    trayController.destroy()
+    updateManager.shutdown()
+    shutdownPromise = controller.shutdown()
+    return shutdownPromise
+  }
+  const installUpdate = async (): Promise<void> => {
+    await shutdown()
+    shutdownComplete = true
+    updateManager.quitAndInstall()
+  }
+  const unregisterIpc = registerIpcHandlers(controller, updateManager, installUpdate)
   const unsubscribe = controller.subscribe((state) => {
     trayController.update(state)
     if (!trayWindow.browserWindow.isDestroyed()) {
       trayWindow.browserWindow.webContents.send(IPC_CHANNELS.stateChanged, state)
     }
   })
+  const unsubscribeUpdates = updateManager.subscribe((state) => {
+    if (!trayWindow.browserWindow.isDestroyed()) {
+      trayWindow.browserWindow.webContents.send(IPC_CHANNELS.updateStateChanged, state)
+    }
+  })
 
   trayController.update(controller.getState())
+  updateManager.initialize()
 
   app.on('second-instance', () => trayWindow.show(trayController.tray))
   app.on('activate', () => trayWindow.show(trayController.tray))
-  let shutdownStarted = false
-  let shutdownComplete = false
   app.on('before-quit', (event) => {
     if (shutdownComplete) return
     event.preventDefault()
-    if (shutdownStarted) return
-    shutdownStarted = true
-    trayWindow.prepareToQuit()
-    unsubscribe()
-    unregisterIpc()
-    trayController.destroy()
-    void controller.shutdown().finally(() => {
+    void shutdown().finally(() => {
       shutdownComplete = true
       app.quit()
     })

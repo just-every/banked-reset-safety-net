@@ -1,4 +1,4 @@
-export const SETTINGS_VERSION = 2
+export const SETTINGS_VERSION = 3
 export const DEFAULT_LEAD_TIME_MINUTES = 30
 export const MIN_LEAD_TIME_MINUTES = 1
 export const MAX_LEAD_TIME_MINUTES = 60
@@ -16,7 +16,27 @@ export interface AppSettings {
   version: typeof SETTINGS_VERSION
   codexExecutable: string
   launchAtLogin: boolean
+  ignoredCodexHomes: string[]
   profiles: ProfileSettings[]
+}
+
+export type UpdateStatus =
+  | 'unsupported'
+  | 'idle'
+  | 'checking'
+  | 'current'
+  | 'available'
+  | 'downloading'
+  | 'ready'
+  | 'error'
+
+export interface UpdateViewState {
+  status: UpdateStatus
+  currentVersion: string
+  availableVersion: string | null
+  downloadPercent: number | null
+  checkedAt: number | null
+  message: string
 }
 
 export type ResetCreditType = 'codexRateLimits' | 'unknown'

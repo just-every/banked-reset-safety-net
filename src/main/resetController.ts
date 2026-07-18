@@ -95,6 +95,15 @@ export class ResetController {
     await this.refresh()
   }
 
+  async discoverCodexHomes(): Promise<number> {
+    const added = await this.options.settings.discoverProfiles()
+    if (added > 0) {
+      this.emit()
+      await this.refresh()
+    }
+    return added
+  }
+
   async updateProfile(profileId: string, input: UpdateProfileInput): Promise<void> {
     const before = this.options.settings
       .get()

@@ -9,7 +9,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$installers = @(Get-ChildItem -Path $ReleaseDirectory -File -Filter "Reset-Net-*-win-$Architecture.exe")
+$installers = @(Get-ChildItem -Path $ReleaseDirectory -File -Filter "Reset-Net-win-$Architecture.exe")
 if ($installers.Count -ne 1) {
   throw "Expected exactly one Windows $Architecture installer, found $($installers.Count)."
 }
@@ -47,5 +47,17 @@ if ($machine -ne $expectedMachine) {
 }
 
 $hash = Get-FileHash -Algorithm SHA256 -Path $installers[0].FullName
-"$($hash.Hash.ToLowerInvariant())  $($installers[0].Name)" |
+$blockmap = "$($installers[0].FullName).blockmap"
+$metadataName = if ($Architecture -eq "x64") { "latest.yml" } else { "latest-arm64.yml" }
+$metadata = Join-Path $ReleaseDirectory $metadataName
+if (-not (Test-Path -Path $blockmap -PathType Leaf) -or -not (Test-Path -Path $metadata -PathType Leaf)) {
+  throw "Windows $Architecture update metadata or installer blockmap is missing."
+}
+$blockmapHash = Get-FileHash -Algorithm SHA256 -Path $blockmap
+$metadataHash = Get-FileHash -Algorithm SHA256 -Path $metadata
+@(
+  "$($hash.Hash.ToLowerInvariant())  $($installers[0].Name)"
+  "$($blockmapHash.Hash.ToLowerInvariant())  $([System.IO.Path]::GetFileName($blockmap))"
+  "$($metadataHash.Hash.ToLowerInvariant())  $metadataName"
+) |
   Set-Content -Path "$ReleaseDirectory/SHA256SUMS-windows-$Architecture.txt" -Encoding ascii

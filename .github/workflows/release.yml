@@ -73,8 +73,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           path: |
-            release/Reset-Net-*-mac-universal.dmg
-            release/Reset-Net-*-mac-universal.zip
+            release/Reset-Net-mac-universal.dmg
+            release/Reset-Net-mac-universal.zip
+            release/Reset-Net-mac-universal.zip.blockmap
+            release/latest-mac.yml
             release/SHA256SUMS-macos.txt
 
   windows:
@@ -120,7 +122,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           path: |
-            release/Reset-Net-*-win-${{ matrix.arch }}.exe
+            release/Reset-Net-win-${{ matrix.arch }}.exe
+            release/Reset-Net-win-${{ matrix.arch }}.exe.blockmap
+            release/latest*.yml
             release/SHA256SUMS-windows-${{ matrix.arch }}.txt
 
   bundle:
@@ -153,10 +157,16 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           path: |
-            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-mac-universal.dmg
-            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-mac-universal.zip
-            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-win-x64.exe
-            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-win-arm64.exe
+            dist/Reset-Net-mac-universal.dmg
+            dist/Reset-Net-mac-universal.zip
+            dist/Reset-Net-mac-universal.zip.blockmap
+            dist/Reset-Net-win-x64.exe
+            dist/Reset-Net-win-x64.exe.blockmap
+            dist/Reset-Net-win-arm64.exe
+            dist/Reset-Net-win-arm64.exe.blockmap
+            dist/latest-mac.yml
+            dist/latest.yml
+            dist/latest-arm64.yml
             dist/SHA256SUMS.txt
 
   publish:
@@ -182,10 +192,16 @@ jobs:
       - name: Publish release
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            dist/Reset-Net-*-mac-universal.dmg \
-            dist/Reset-Net-*-mac-universal.zip \
-            dist/Reset-Net-*-win-x64.exe \
-            dist/Reset-Net-*-win-arm64.exe \
+            dist/Reset-Net-mac-universal.dmg \
+            dist/Reset-Net-mac-universal.zip \
+            dist/Reset-Net-mac-universal.zip.blockmap \
+            dist/Reset-Net-win-x64.exe \
+            dist/Reset-Net-win-x64.exe.blockmap \
+            dist/Reset-Net-win-arm64.exe \
+            dist/Reset-Net-win-arm64.exe.blockmap \
+            dist/latest-mac.yml \
+            dist/latest.yml \
+            dist/latest-arm64.yml \
             dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \

@@ -6,7 +6,7 @@ import { SettingsStore } from '../src/main/settings/settingsStore'
 import { SETTINGS_VERSION, type AppSettings } from '../src/shared/types'
 
 describe('multiple Codex homes', () => {
-  it('uses ~/.codex for a first run even when CODEX_HOME points elsewhere', async () => {
+  it('prioritizes ~/.codex and discovers sibling Codex homes without using CODEX_HOME', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'reset-net-default-home-'))
     const defaultHome = path.join(directory, '.codex')
     const inheritedHome = path.join(directory, '.codex_zara')
@@ -17,10 +17,16 @@ describe('multiple Codex homes', () => {
     try {
       const store = new SettingsStore(path.join(directory, 'settings.json'), defaultHome)
       const settings = await store.initialize()
-      expect(settings.profiles).toHaveLength(1)
+      expect(settings.profiles).toHaveLength(2)
       expect(settings.profiles[0]).toMatchObject({
         name: 'Default Codex',
         codexHome: defaultHome,
+        enabled: true,
+        autoRedeemEnabled: false
+      })
+      expect(settings.profiles[1]).toMatchObject({
+        name: 'Codex Zara',
+        codexHome: inheritedHome,
         enabled: true,
         autoRedeemEnabled: false
       })
@@ -51,7 +57,7 @@ describe('multiple Codex homes', () => {
       'utf8'
     )
 
-    const store = new SettingsStore(filePath)
+    const store = new SettingsStore(filePath, home, directory)
     const settings = await store.initialize()
     expect(settings.version).toBe(SETTINGS_VERSION)
     expect(settings.profiles[0]).toMatchObject({
@@ -72,7 +78,7 @@ describe('multiple Codex homes', () => {
 
     const filePath = path.join(directory, 'settings.json')
     await writeFile(filePath, JSON.stringify(settingsWith(firstHome)), 'utf8')
-    const store = new SettingsStore(filePath)
+    const store = new SettingsStore(filePath, firstHome, directory)
     await store.initialize()
 
     const updated = await store.addProfile({ name: 'Second account', codexHome: secondHome })
@@ -98,7 +104,7 @@ describe('multiple Codex homes', () => {
     const initial = settingsWith(firstHome)
     initial.profiles[0]!.autoRedeemEnabled = true
     await writeFile(filePath, JSON.stringify(initial), 'utf8')
-    const store = new SettingsStore(filePath)
+    const store = new SettingsStore(filePath, firstHome, directory)
     await store.initialize()
 
     const updated = await store.updateProfile('profile-1', { codexHome: secondHome })
@@ -107,6 +113,22 @@ describe('multiple Codex homes', () => {
       autoRedeemEnabled: false
     })
   })
+
+  it('does not rediscover a home the user removed', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'reset-net-ignore-home-'))
+    const defaultHome = path.join(directory, '.codex')
+    const otherHome = path.join(directory, '.codex_work')
+    await Promise.all([mkdir(defaultHome), mkdir(otherHome)])
+
+    const store = new SettingsStore(path.join(directory, 'settings.json'), defaultHome, directory)
+    const initialized = await store.initialize()
+    const otherProfile = initialized.profiles.find((profile) => profile.codexHome === otherHome)
+    expect(otherProfile).toBeDefined()
+
+    await store.removeProfile(otherProfile!.id)
+    expect(await store.discoverProfiles()).toBe(0)
+    expect(store.get().profiles.map((profile) => profile.codexHome)).toEqual([defaultHome])
+  })
 })
 
 function settingsWith(codexHome: string): AppSettings {
@@ -114,6 +136,7 @@ function settingsWith(codexHome: string): AppSettings {
     version: SETTINGS_VERSION,
     codexExecutable: '',
     launchAtLogin: false,
+    ignoredCodexHomes: [],
     profiles: [
       {
         id: 'profile-1',

@@ -53,8 +53,8 @@ fi
 verify_app "$app"
 
 shopt -s nullglob
-dmgs=("$release_directory"/Reset-Net-*-mac-universal.dmg)
-zips=("$release_directory"/Reset-Net-*-mac-universal.zip)
+dmgs=("$release_directory"/Reset-Net-mac-universal.dmg)
+zips=("$release_directory"/Reset-Net-mac-universal.zip)
 if (( ${#dmgs[@]} != 1 || ${#zips[@]} != 1 )); then
   echo 'Expected exactly one universal DMG and one universal ZIP.' >&2
   exit 1
@@ -83,7 +83,12 @@ verify_app "$zip_directory/Reset Net.app"
 
 dmg_name="$(basename "${dmgs[0]}")"
 zip_name="$(basename "${zips[0]}")"
+blockmap_name="$zip_name.blockmap"
+if [[ ! -s "$release_directory/$blockmap_name" || ! -s "$release_directory/latest-mac.yml" ]]; then
+  echo 'macOS update metadata or ZIP blockmap is missing.' >&2
+  exit 1
+fi
 (
   cd "$release_directory"
-  shasum -a 256 "$dmg_name" "$zip_name" > SHA256SUMS-macos.txt
+  shasum -a 256 "$dmg_name" "$zip_name" "$blockmap_name" latest-mac.yml > SHA256SUMS-macos.txt
 )
