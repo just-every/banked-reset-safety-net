@@ -1,7 +1,7 @@
 import type { ConsumeResetOutcome, ProfileSettings } from '../../shared/types'
 import { comparablePath } from '../paths'
 import { CodexSession } from './codexSession'
-import type { RateLimitResetCredits } from './protocol'
+import type { RateLimitsReadResult } from './protocol'
 
 interface ManagedSession {
   key: string
@@ -11,11 +11,19 @@ interface ManagedSession {
 export class CodexSessionManager {
   private readonly sessions = new Map<string, ManagedSession>()
 
+  async readRateLimits(
+    profile: ProfileSettings,
+    executable: string
+  ): Promise<RateLimitsReadResult> {
+    return this.withSession(profile, executable, (session) => session.readRateLimits())
+  }
+
   async readResetCredits(
     profile: ProfileSettings,
     executable: string
-  ): Promise<RateLimitResetCredits> {
-    return this.withSession(profile, executable, (session) => session.readResetCredits())
+  ): Promise<Pick<RateLimitsReadResult, 'availableCount' | 'credits'>> {
+    const { availableCount, credits } = await this.readRateLimits(profile, executable)
+    return { availableCount, credits }
   }
 
   async consumeCredit(

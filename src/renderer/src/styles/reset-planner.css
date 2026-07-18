@@ -1,0 +1,160 @@
+.reset-planner {
+  margin-top: 10px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.reset-planner-heading,
+.planner-line-label,
+.planner-line-detail,
+.planner-axis {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reset-planner-heading {
+  align-items: flex-start;
+}
+
+.reset-planner-heading h3 {
+  font-size: 10px;
+  font-weight: 680;
+}
+
+.reset-planner-heading p {
+  max-width: 210px;
+  margin-top: 3px;
+  color: #777d8e;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.planner-legend {
+  display: flex;
+  gap: 6px;
+  color: #8f95a5;
+  font-size: 7px;
+  white-space: nowrap;
+}
+
+.planner-legend span::before {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 3px;
+  border-radius: 50%;
+  content: '';
+}
+
+.legend-normal::before {
+  background: #6f7687;
+}
+
+.legend-use::before {
+  background: #9a80ff;
+}
+
+.legend-expiry::before {
+  background: #ed7e8c;
+}
+
+.planner-axis {
+  margin-top: 9px;
+  color: #656b7b;
+  font-size: 7px;
+}
+
+.planner-lines {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.planner-line-label {
+  color: #aeb3c1;
+  font-size: 9px;
+}
+
+.planner-line-label strong {
+  color: #cfcaff;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.planner-track {
+  position: relative;
+  height: 14px;
+  margin-top: 3px;
+}
+
+.planner-track::before {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.09);
+  content: '';
+}
+
+.planner-marker {
+  position: absolute;
+  z-index: 1;
+  transform: translateX(-50%);
+}
+
+.planner-marker.normal {
+  top: 1px;
+  width: 1px;
+  height: 12px;
+  background: #626979;
+}
+
+.planner-marker.use {
+  top: 2px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #262331;
+  border-radius: 50%;
+  background: #9a80ff;
+  box-shadow: 0 0 0 2px rgba(154, 128, 255, 0.18);
+}
+
+.planner-marker.use.is-due {
+  background: #ffb06e;
+}
+
+.planner-marker.expiry {
+  top: 0;
+  width: 2px;
+  height: 14px;
+  border-radius: 2px;
+  background: #ed7e8c;
+}
+
+.planner-line-detail {
+  align-items: flex-start;
+  margin-top: 2px;
+  color: #747a8b;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.planner-line-detail span:first-child {
+  max-width: 230px;
+}
+
+.planner-safety {
+  margin-top: 2px;
+  color: #898fa0;
+  font-size: 8px;
+}
+
+.planner-line-detail span:last-child {
+  flex: 0 0 auto;
+  color: #9399a9;
+  text-align: right;
+}

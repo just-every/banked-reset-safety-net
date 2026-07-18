@@ -67,7 +67,7 @@ export class ProfilePoller {
     generation: number
   ): Promise<void> {
     try {
-      const result = await this.sessions.readResetCredits(profile, executable)
+      const result = await this.sessions.readRateLimits(profile, executable)
       if (generation !== this.generation) return
       if (result.credits === null && result.availableCount > 0) {
         throw new Error(
@@ -78,6 +78,7 @@ export class ProfilePoller {
       this.states.set(profile.id, {
         profileId: profile.id,
         status: 'ready',
+        usageLimits: result.usageLimits,
         availableCount: result.availableCount,
         credits: [...(result.credits ?? [])].sort(
           (left, right) =>
@@ -98,6 +99,7 @@ function emptyProfileState(profileId: string): ProfileRuntimeState {
   return {
     profileId,
     status: 'idle',
+    usageLimits: [],
     availableCount: 0,
     credits: [],
     refreshedAt: null,

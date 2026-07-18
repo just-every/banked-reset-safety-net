@@ -1,4 +1,4 @@
-import type { ConsumeResetOutcome, ResetCredit } from '../../shared/types'
+import type { ConsumeResetOutcome, ResetCredit, UsageLimit, UsageWindow } from '../../shared/types'
 
 export interface InitializeResult {
   userAgent: string
@@ -7,7 +7,8 @@ export interface InitializeResult {
   platformOs: string
 }
 
-export interface RateLimitResetCredits {
+export interface RateLimitsReadResult {
+  usageLimits: UsageLimit[]
   availableCount: number
   credits: ResetCredit[] | null
 }
@@ -21,11 +22,12 @@ export function parseInitializeResult(value: unknown): InitializeResult {
   return input as unknown as InitializeResult
 }
 
-export function parseRateLimitResetCredits(value: unknown): RateLimitResetCredits {
+export function parseRateLimitsReadResult(value: unknown): RateLimitsReadResult {
   const response = requireRecord(value, 'rate limits response')
+  const usageLimits = parseUsageLimits(response)
   const summaryValue = response.rateLimitResetCredits
   if (summaryValue === null || summaryValue === undefined) {
-    return { availableCount: 0, credits: null }
+    return { usageLimits, availableCount: 0, credits: null }
   }
 
   const summary = requireRecord(summaryValue, 'rateLimitResetCredits')
@@ -37,9 +39,98 @@ export function parseRateLimitResetCredits(value: unknown): RateLimitResetCredit
   }
 
   return {
+    usageLimits,
     availableCount: Number(summary.availableCount),
     credits: summary.credits === null ? null : summary.credits.map(parseCredit)
   }
+}
+
+function parseUsageLimits(response: Record<string, unknown>): UsageLimit[] {
+  const snapshots = new Map<string, UsageLimit>()
+  const byLimitId = response.rateLimitsByLimitId
+
+  if (byLimitId !== null && byLimitId !== undefined) {
+    const record = requireRecord(byLimitId, 'rateLimitsByLimitId')
+    for (const [key, value] of Object.entries(record)) {
+      const snapshot = parseUsageLimit(value, `rateLimitsByLimitId.${key}`, key)
+      snapshots.set(snapshot.id, snapshot)
+    }
+  }
+
+  if (snapshots.size === 0) {
+    const snapshot = parseUsageLimit(response.rateLimits, 'rateLimits', null)
+    snapshots.set(snapshot.id, snapshot)
+  }
+
+  return [...snapshots.values()].sort((left, right) => {
+    if (left.id === 'codex') return -1
+    if (right.id === 'codex') return 1
+    return usageLimitLabel(left).localeCompare(usageLimitLabel(right))
+  })
+}
+
+function parseUsageLimit(value: unknown, label: string, fallbackId: string | null): UsageLimit {
+  const input = requireRecord(value, label)
+  const id = input.limitId === null || input.limitId === undefined ? fallbackId : input.limitId
+  if (typeof id !== 'string' || !id) throw new Error(`${label}.limitId is invalid.`)
+  if (input.limitName !== null && input.limitName !== undefined && typeof input.limitName !== 'string') {
+    throw new Error(`${label}.limitName is invalid.`)
+  }
+  if (input.planType !== null && input.planType !== undefined && typeof input.planType !== 'string') {
+    throw new Error(`${label}.planType is invalid.`)
+  }
+  if (
+    input.rateLimitReachedType !== null &&
+    input.rateLimitReachedType !== undefined &&
+    typeof input.rateLimitReachedType !== 'string'
+  ) {
+    throw new Error(`${label}.rateLimitReachedType is invalid.`)
+  }
+
+  return {
+    id,
+    name: (input.limitName as string | null | undefined) ?? null,
+    primary: parseUsageWindow(input.primary, `${label}.primary`),
+    secondary: parseUsageWindow(input.secondary, `${label}.secondary`),
+    planType: (input.planType as string | null | undefined) ?? null,
+    rateLimitReachedType: (input.rateLimitReachedType as string | null | undefined) ?? null
+  }
+}
+
+function parseUsageWindow(value: unknown, label: string): UsageWindow | null {
+  if (value === null || value === undefined) return null
+  const input = requireRecord(value, label)
+  if (
+    typeof input.usedPercent !== 'number' ||
+    !Number.isFinite(input.usedPercent) ||
+    input.usedPercent < 0 ||
+    input.usedPercent > 100
+  ) {
+    throw new Error(`${label}.usedPercent is invalid.`)
+  }
+  if (
+    input.windowDurationMins !== null &&
+    (!Number.isSafeInteger(input.windowDurationMins) || Number(input.windowDurationMins) <= 0)
+  ) {
+    throw new Error(`${label}.windowDurationMins is invalid.`)
+  }
+  if (
+    input.resetsAt !== null &&
+    (!Number.isSafeInteger(input.resetsAt) || Number(input.resetsAt) <= 0)
+  ) {
+    throw new Error(`${label}.resetsAt is invalid.`)
+  }
+
+  return {
+    usedPercent: input.usedPercent,
+    windowDurationMinutes:
+      input.windowDurationMins === null ? null : Number(input.windowDurationMins),
+    resetsAt: input.resetsAt === null ? null : Number(input.resetsAt)
+  }
+}
+
+function usageLimitLabel(limit: UsageLimit): string {
+  return limit.name ?? limit.id
 }
 
 export function parseConsumeOutcome(value: unknown): ConsumeResetOutcome {

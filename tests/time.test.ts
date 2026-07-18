@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { formatHomePathForDisplay } from '../src/shared/pathDisplay'
 import { findNextExpiringCredit, formatCountdown, formatTrayCountdown } from '../src/shared/time'
 import type { ProfileRuntimeState } from '../src/shared/types'
 
@@ -18,12 +19,20 @@ describe('countdown helpers', () => {
     ])
     expect(findNextExpiringCredit([profile], 10)?.credit.id).toBe('next')
   })
+
+  it('keeps account paths private in the visible UI', () => {
+    expect(formatHomePathForDisplay('/Users/alex/.codex')).toBe('~/.codex')
+    expect(formatHomePathForDisplay('/home/alex/.codex_work')).toBe('~/.codex_work')
+    expect(formatHomePathForDisplay('C:\\Users\\alex\\.codex')).toBe('~\\.codex')
+    expect(formatHomePathForDisplay('/srv/codex')).toBe('/srv/codex')
+  })
 })
 
 function runtimeState(credits: ProfileRuntimeState['credits']): ProfileRuntimeState {
   return {
     profileId: 'profile-1',
     status: 'ready',
+    usageLimits: [],
     availableCount: credits.length,
     credits,
     refreshedAt: 1,

@@ -42,6 +42,7 @@ describe('automatic reset runner', () => {
     runtime = {
       profileId: 'profile-1',
       status: 'ready',
+      usageLimits: [],
       availableCount: 1,
       credits: [credit],
       refreshedAt: now,

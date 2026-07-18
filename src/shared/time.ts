@@ -61,3 +61,12 @@ export function formatLocalDateTime(epochSeconds: number): string {
     timeStyle: 'short'
   }).format(new Date(epochSeconds * 1000))
 }
+
+export function formatCompactLocalDateTime(epochSeconds: number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(epochSeconds * 1_000))
+}

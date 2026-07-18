@@ -32,11 +32,27 @@ export interface ResetCredit {
   description: string | null
 }
 
+export interface UsageWindow {
+  usedPercent: number
+  windowDurationMinutes: number | null
+  resetsAt: number | null
+}
+
+export interface UsageLimit {
+  id: string
+  name: string | null
+  primary: UsageWindow | null
+  secondary: UsageWindow | null
+  planType: string | null
+  rateLimitReachedType: string | null
+}
+
 export type ProfileLoadStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 export interface ProfileRuntimeState {
   profileId: string
   status: ProfileLoadStatus
+  usageLimits: UsageLimit[]
   availableCount: number
   credits: ResetCredit[]
   refreshedAt: number | null

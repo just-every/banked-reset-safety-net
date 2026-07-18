@@ -19,6 +19,10 @@
     linear-gradient(150deg, #202431, #181b24);
 }
 
+.hero-card.usage-overview {
+  min-height: 0;
+}
+
 .hero-card::after {
   position: absolute;
   right: -34px;
@@ -73,6 +77,11 @@
   padding: 6px 10px;
   font-size: 11px;
   cursor: pointer;
+}
+
+.usage-overview .refresh-button {
+  position: static;
+  flex: 0 0 auto;
 }
 
 .refresh-button:hover:not(:disabled) {

@@ -5,11 +5,11 @@ import { JsonRpcProcess, type RpcConnection } from './jsonRpcProcess'
 import {
   parseConsumeOutcome,
   parseInitializeResult,
-  parseRateLimitResetCredits,
-  type RateLimitResetCredits
+  parseRateLimitsReadResult,
+  type RateLimitsReadResult
 } from './protocol'
 
-const CLIENT_VERSION = '0.1.2'
+const CLIENT_VERSION = '0.2.0'
 
 export class CodexSession {
   private readonly rpc: RpcConnection
@@ -45,9 +45,9 @@ export class CodexSession {
     return !this.closed && (!this.started || this.rpc.isOpen())
   }
 
-  async readResetCredits(): Promise<RateLimitResetCredits> {
+  async readRateLimits(): Promise<RateLimitsReadResult> {
     await this.start()
-    return parseRateLimitResetCredits(await this.rpc.request('account/rateLimits/read'))
+    return parseRateLimitsReadResult(await this.rpc.request('account/rateLimits/read'))
   }
 
   async consumeCredit(creditId: string, idempotencyKey: string): Promise<ConsumeResetOutcome> {

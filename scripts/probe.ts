@@ -13,12 +13,13 @@ const executable = await resolveCodexExecutable(options.codexExecutable)
 const session = new CodexSession(executable, options.home)
 
 try {
-  const result = await session.readResetCredits()
+  const result = await session.readRateLimits()
   console.log(
     JSON.stringify(
       {
         codexHome: options.home,
         codexExecutable: executable,
+        usageLimits: result.usageLimits,
         availableCount: result.availableCount,
         credits: (result.credits ?? []).map((credit) => ({
           title: credit.title,

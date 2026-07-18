@@ -11,7 +11,8 @@ describe('CodexSession safety boundary', () => {
     const rpc = new RecordingRpc(home)
     const session = new CodexSession('/test/codex', home, rpc)
 
-    await session.readResetCredits()
+    const snapshot = await session.readRateLimits()
+    expect(snapshot.usageLimits[0]?.primary?.usedPercent).toBe(12)
     expect(rpc.requests.map(({ method }) => method)).toEqual([
       'initialize',
       'account/rateLimits/read'
@@ -55,7 +56,14 @@ class RecordingRpc implements RpcConnection {
     }
     if (method === 'account/rateLimits/read') {
       return Promise.resolve({
-        rateLimits: {},
+        rateLimits: {
+          limitId: 'codex',
+          limitName: null,
+          primary: { usedPercent: 12, windowDurationMins: 10_080, resetsAt: 20_000 },
+          secondary: null,
+          planType: 'pro',
+          rateLimitReachedType: null
+        },
         rateLimitResetCredits: { availableCount: 0, credits: [] }
       })
     }

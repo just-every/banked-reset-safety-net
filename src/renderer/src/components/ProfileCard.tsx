@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { formatCountdown, formatLocalDateTime } from '../../../shared/time'
 import type {
   ProfileRuntimeState,
   ProfileSettings,
   UpdateProfileInput
 } from '../../../shared/types'
 import { MAX_LEAD_TIME_MINUTES } from '../../../shared/types'
+import { formatHomePathForDisplay } from '../../../shared/pathDisplay'
+import { ProfileRuntime } from './ProfileRuntime'
 
 interface ProfileCardProps {
   profile: ProfileSettings
@@ -80,7 +81,7 @@ export function ProfileCard({ profile, runtime, now, run }: ProfileCardProps): R
             }}
           />
           <div className="profile-home" title={profile.codexHome}>
-            {profile.codexHome}
+            {formatHomePathForDisplay(profile.codexHome)}
           </div>
         </div>
         <label className="switch-label">
@@ -93,7 +94,7 @@ export function ProfileCard({ profile, runtime, now, run }: ProfileCardProps): R
         </label>
       </div>
 
-      <RuntimeSummary
+      <ProfileRuntime
         runtime={runtime}
         now={now}
         leadTimeMinutes={profile.leadTimeMinutes}
@@ -135,55 +136,5 @@ export function ProfileCard({ profile, runtime, now, run }: ProfileCardProps): R
         </button>
       </div>
     </article>
-  )
-}
-
-function RuntimeSummary({
-  runtime,
-  now,
-  leadTimeMinutes,
-  autoRedeemEnabled
-}: {
-  runtime: ProfileRuntimeState
-  now: number
-  leadTimeMinutes: number
-  autoRedeemEnabled: boolean
-}): React.JSX.Element {
-  if (runtime.status === 'loading') return <div className="runtime-message">Checking Codex…</div>
-  if (runtime.status === 'error') return <div className="runtime-message error">{runtime.error}</div>
-  if (runtime.status !== 'ready') return <div className="runtime-message">Tracking paused.</div>
-  if (runtime.availableCount === 0) {
-    return <div className="runtime-message">No banked resets available.</div>
-  }
-
-  return (
-    <div className="credit-list">
-      {runtime.credits.map((credit) => (
-        <div className="credit-row" key={credit.id}>
-          <div>
-            <div className="credit-title">{credit.title ?? 'Codex reset'}</div>
-            {credit.expiresAt ? (
-              <div className="credit-expiry">
-                {formatLocalDateTime(credit.expiresAt)}
-                {autoRedeemEnabled ? (
-                  <> · auto-use at {formatLocalDateTime(credit.expiresAt - leadTimeMinutes * 60)}</>
-                ) : null}
-              </div>
-            ) : (
-              <div className="credit-expiry">No expiry supplied</div>
-            )}
-          </div>
-          <div className="credit-countdown">
-            {credit.expiresAt ? formatCountdown(credit.expiresAt, now) : '—'}
-          </div>
-        </div>
-      ))}
-      {runtime.credits.length < runtime.availableCount ? (
-        <div className="runtime-message">
-          Codex reports {runtime.availableCount - runtime.credits.length} additional reset(s) without
-          details.
-        </div>
-      ) : null}
-    </div>
   )
 }

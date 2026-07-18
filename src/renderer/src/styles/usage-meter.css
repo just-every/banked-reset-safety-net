@@ -1,0 +1,107 @@
+.profile-runtime {
+  margin-top: 12px;
+}
+
+.usage-meter-list {
+  display: grid;
+  gap: 8px;
+}
+
+.usage-meter {
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  background: rgba(11, 13, 18, 0.24);
+}
+
+.usage-meter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.usage-meter-heading > div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.usage-meter-name {
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usage-meter-window {
+  color: #7f8596;
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.usage-meter-heading strong {
+  color: #dcd9ff;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.usage-track {
+  position: relative;
+  height: 9px;
+  margin-top: 9px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.usage-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6f63f5, #9a7eff);
+  box-shadow: 0 0 12px rgba(126, 104, 255, 0.25);
+}
+
+.usage-expected-marker {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 15px;
+  border-radius: 2px;
+  background: #f2f4fb;
+  box-shadow: 0 0 0 2px rgba(17, 19, 26, 0.62);
+  transform: translateX(-1px);
+}
+
+.usage-meter-detail {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 7px;
+  color: #858b9b;
+  font-size: 8px;
+}
+
+.usage-meter-detail .pace-badge {
+  margin-left: auto;
+}
+
+.usage-reset-detail {
+  margin-top: 7px;
+  color: #a6abba;
+  font-size: 9px;
+}
+
+.usage-reset-detail strong {
+  color: #e0e2ea;
+  font-variant-numeric: tabular-nums;
+}
+
+.banked-empty {
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}

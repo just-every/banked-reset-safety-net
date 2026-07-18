@@ -1,8 +1,8 @@
 import { ActivityList } from './components/ActivityList'
 import { AddProfile } from './components/AddProfile'
-import { NextReset } from './components/NextReset'
 import { ProfileCard } from './components/ProfileCard'
 import { SettingsPanel } from './components/SettingsPanel'
+import { UsageOverview } from './components/UsageOverview'
 import { useAppState } from './hooks/useAppState'
 import { useNow } from './hooks/useNow'
 
@@ -37,7 +37,7 @@ export function App(): React.JSX.Element {
           </div>
         ) : null}
 
-        <NextReset
+        <UsageOverview
           state={state}
           now={now}
           refreshing={refreshing}

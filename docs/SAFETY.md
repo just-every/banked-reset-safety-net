@@ -6,9 +6,9 @@ production consume call.
 
 ## Discovery cannot redeem
 
-Normal refreshes call only `account/rateLimits/read`. They can update countdowns but cannot select
-or consume a credit. The CLI terminal probe used during development also stopped at the list with
-Cancel selected, exited with Escape, and retained all four credits.
+Normal refreshes call only `account/rateLimits/read`. They update normal-usage percentages, reset
+times, banked-expiry countdowns, and the advisory pace projection, but cannot select or consume a
+credit. The CLI probe used during development calls the same read method and has no consume path.
 
 ## Authorization checks
 
@@ -21,7 +21,7 @@ An automatic request is eligible only when all of these remain true:
 5. a fresh `account/rateLimits/read` returns the same opaque credit ID;
 6. the fresh credit has the same expiry timestamp, type, and `available` status;
 7. the app-server reports the same canonical `CODEX_HOME` that was configured;
-8. settings do not change while the request is being prepared.
+8. settings do not change while the request is being prepared; and
 9. no more than 60 minutes remain before expiry, checked again immediately before consumption.
 
 The consumer API requires a non-empty credit ID. Reset Net never asks the backend to choose an
@@ -70,6 +70,6 @@ credits remain parallel, while the same backend credit is serialized across prof
 
 ## Test boundary
 
-Production discovery was tested against `~/.codex`. Redemption behavior is covered with test
-fixtures only. The live account was probed again after UI testing: four credits remained available,
-and the production automation ledger contained zero records and zero events.
+Production discovery and the documented UI were tested against live, read-only `~/.codex` data.
+Redemption behavior is covered by the automated test suite. No consume method was called while
+implementing or capturing the usage-planning update.
