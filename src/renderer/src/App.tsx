@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { ActivityList } from './components/ActivityList'
 import { AddProfile } from './components/AddProfile'
-import { DashboardProfileCard } from './components/DashboardProfileCard'
 import { ProfileCard } from './components/ProfileCard'
 import { SettingsPanel } from './components/SettingsPanel'
 import { UpdatePanel } from './components/UpdatePanel'
-import { UsageOverview } from './components/UsageOverview'
+import { UsageRhythmDashboard } from './components/UsageRhythmDashboard'
 import { useAppState } from './hooks/useAppState'
 import { useNow } from './hooks/useNow'
 import { useUpdateState } from './hooks/useUpdateState'
@@ -25,33 +24,29 @@ export function App(): React.JSX.Element {
 
   return (
     <main>
-      <header className="titlebar">
-        <div className="brand-mark" aria-hidden="true">
-          ↻
+      <header className="app-chrome">
+        <div className="chrome-brand">
+          <span aria-hidden="true">↻</span>
+          <strong>Banked Reset Safety Net</strong>
         </div>
-        <div>
-          <h1>Banked Reset Safety Net</h1>
-          <p>Codex banked resets</p>
-        </div>
+        <nav className="app-tabs" aria-label="Banked Reset Safety Net sections">
+          <button
+            type="button"
+            className={tab === 'status' ? 'is-active' : ''}
+            onClick={() => setTab('status')}
+          >
+            Status
+          </button>
+          <button
+            type="button"
+            className={tab === 'settings' ? 'is-active' : ''}
+            onClick={() => setTab('settings')}
+          >
+            Settings
+            {update?.status === 'ready' ? <span className="tab-alert" /> : null}
+          </button>
+        </nav>
       </header>
-
-      <nav className="app-tabs" aria-label="Banked Reset Safety Net sections">
-        <button
-          type="button"
-          className={tab === 'status' ? 'is-active' : ''}
-          onClick={() => setTab('status')}
-        >
-          Status
-        </button>
-        <button
-          type="button"
-          className={tab === 'settings' ? 'is-active' : ''}
-          onClick={() => setTab('settings')}
-        >
-          Settings
-          {update?.status === 'ready' ? <span className="tab-alert" /> : null}
-        </button>
-      </nav>
 
       <div className="scroll-content">
         {error ? (
@@ -64,34 +59,12 @@ export function App(): React.JSX.Element {
         ) : null}
 
         {tab === 'status' ? (
-          <>
-            <UsageOverview
-              state={state}
-              now={now}
-              refreshing={refreshing}
-              onRefresh={() => void run(() => window.resetNet.refresh())}
-            />
-            <section className="profiles-section">
-              <div className="section-heading">
-                <h2>Codex homes</h2>
-                <span>{state.settings.profiles.length}</span>
-              </div>
-              {state.settings.profiles.map((profile) => {
-                const runtime = state.profiles.find(
-                  (candidate) => candidate.profileId === profile.id
-                )
-                if (!runtime) return null
-                return (
-                  <DashboardProfileCard
-                    key={profile.id}
-                    profile={profile}
-                    runtime={runtime}
-                    now={now}
-                  />
-                )
-              })}
-            </section>
-          </>
+          <UsageRhythmDashboard
+            state={state}
+            now={now}
+            refreshing={refreshing}
+            onRefresh={() => void run(() => window.resetNet.refresh())}
+          />
         ) : (
           <div className="settings-page">
             <section className="settings-card homes-settings">

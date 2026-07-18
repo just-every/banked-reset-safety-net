@@ -1,9 +1,10 @@
 @import './styles/base.css';
 @import './styles/surfaces.css';
 @import './styles/profiles.css';
-@import './styles/usage-overview.css';
-@import './styles/usage-meter.css';
-@import './styles/banked-reset-schedule.css';
+@import './styles/usage-rhythm.css';
+@import './styles/rhythm-gauge.css';
+@import './styles/reset-calendar.css';
+@import './styles/banked-reset-list.css';
 @import './styles/profile-form.css';
 @import './styles/activity.css';
 @import './styles/settings.css';

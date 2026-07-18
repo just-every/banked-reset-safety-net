@@ -1,0 +1,177 @@
+.reset-calendar-section {
+  margin-top: 13px;
+  padding-top: 15px;
+  border-top: 1px solid #242a32;
+}
+
+.calendar-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.calendar-heading h3 {
+  color: #dadde3;
+  font-size: 11px;
+  font-weight: 520;
+}
+
+.calendar-heading h3 span {
+  display: inline-block;
+  margin-right: 7px;
+  color: #aeb4bd;
+}
+
+.calendar-heading p {
+  color: #747b86;
+  font-size: 8px;
+}
+
+.calendar-heading p {
+  margin-top: 4px;
+}
+
+.calendar-heading > strong {
+  color: #9ba1ab;
+  font-size: 9px;
+  font-weight: 450;
+}
+
+.calendar-icon {
+  position: relative;
+  width: 11px;
+  height: 10px;
+  border: 1px solid #aeb4bd;
+  border-radius: 2px;
+  transform: translateY(1px);
+}
+
+.calendar-icon::before {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: #aeb4bd;
+  content: '';
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 7px;
+  color: #777e89;
+  font-size: 7px;
+}
+
+.calendar-legend span::before {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: #aeb4be;
+  content: '';
+}
+
+.calendar-legend .is-banked-use::before {
+  background: #8c82d8;
+}
+
+.calendar-legend .is-banked-expiry::before {
+  background: #c98b72;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-grid.weekdays {
+  margin-top: 10px;
+  color: #656c77;
+  font-size: 7px;
+  text-align: center;
+}
+
+.calendar-grid.weekdays span {
+  padding-bottom: 5px;
+}
+
+.calendar-grid.days {
+  overflow: hidden;
+  border: 1px solid #272d35;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.008);
+}
+
+.calendar-day {
+  position: relative;
+  min-height: 51px;
+  border-right: 1px solid #252b33;
+  border-bottom: 1px solid #252b33;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.006);
+}
+
+.calendar-day:nth-child(7n) {
+  border-right: 0;
+}
+
+.calendar-day:nth-last-child(-n + 7) {
+  border-bottom: 0;
+}
+
+.calendar-day time {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 50%;
+  color: #c7cbd2;
+  font-size: 8px;
+}
+
+.calendar-day.is-today time {
+  color: #14171c;
+  background: #e5e7ea;
+  font-weight: 650;
+}
+
+.calendar-day.is-outside time {
+  color: #646b75;
+}
+
+.calendar-day.has-events {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.calendar-events {
+  display: grid;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.calendar-event {
+  overflow: hidden;
+  border-radius: 3px;
+  color: #aeb4be;
+  background: rgba(174, 180, 190, 0.09);
+  padding: 2px 3px;
+  font-size: 6px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-event.is-banked-use {
+  color: #c7c0f2;
+  background: rgba(124, 111, 206, 0.16);
+}
+
+.calendar-event.is-banked-expiry {
+  color: #e2b39f;
+  background: rgba(178, 103, 76, 0.14);
+}

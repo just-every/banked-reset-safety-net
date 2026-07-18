@@ -1,4 +1,3 @@
-.hero-card,
 .profile-card,
 .add-profile-form,
 .activity-section {
@@ -6,90 +5,6 @@
   border-radius: 14px;
   background: rgba(27, 30, 39, 0.92);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.13);
-}
-
-.hero-card {
-  position: relative;
-  min-height: 133px;
-  overflow: hidden;
-  padding: 17px 18px;
-  background:
-    radial-gradient(circle at 83% 13%, rgba(126, 113, 255, 0.32), transparent 37%),
-    linear-gradient(150deg, #202431, #181b24);
-}
-
-.hero-card.usage-overview {
-  min-height: 0;
-}
-
-.hero-card::after {
-  position: absolute;
-  right: -34px;
-  bottom: -51px;
-  width: 137px;
-  height: 137px;
-  border: 1px solid rgba(180, 172, 255, 0.12);
-  border-radius: 50%;
-  content: '';
-}
-
-.hero-label {
-  color: #a5aabc;
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.hero-countdown {
-  margin-top: 9px;
-  font-size: 31px;
-  font-variant-numeric: tabular-nums;
-  font-weight: 690;
-  letter-spacing: -0.045em;
-}
-
-.hero-empty {
-  margin-top: 14px;
-  font-size: 20px;
-  font-weight: 630;
-}
-
-.hero-detail {
-  max-width: 280px;
-  margin-top: 5px;
-  overflow: hidden;
-  color: #9197a9;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.refresh-button {
-  position: absolute;
-  right: 15px;
-  bottom: 14px;
-  z-index: 1;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
-  padding: 6px 10px;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.usage-overview .refresh-button {
-  position: static;
-  flex: 0 0 auto;
-}
-
-.refresh-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.refresh-button:disabled {
-  cursor: default;
-  opacity: 0.55;
 }
 
 .error-banner {

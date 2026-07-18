@@ -12,20 +12,20 @@ and ARM64.
 
 ## What it looks like
 
-The top status card summarizes every usage line across every tracked Codex home. Each profile then
-shows its normal usage bars and banked-reset plan.
+The status view focuses on one tracked Codex home at a time. Its usage rhythm combines current
+consumption, pace, the next natural reset, and a switcher for every other discovered home.
 
-<img src="docs/screenshots/banked-reset-safety-net-overview.png" width="420" alt="Banked Reset Safety Net usage overview">
+<img src="docs/screenshots/usage-rhythm-overview.png" width="720" alt="Banked Reset Safety Net usage rhythm overview">
 
-Each banked reset has a compact row showing its safe use-by time, expiry countdown, and configured
-safety margin. When current usage is projected to run out first, one optional best-use note appears.
+The center is a local-time calendar. Natural scheduled resets, recommended banked-reset use dates,
+and final expiries use distinct markers, with exact banked timing and safety margins directly below.
 
-<img src="docs/screenshots/banked-reset-safety-net-schedule.png" width="392" alt="Banked Reset Safety Net banked-reset schedule">
+<img src="docs/screenshots/usage-rhythm-calendar.png" width="720" alt="Banked Reset Safety Net reset calendar and banked-reset schedule">
 
 Status and configuration now live on separate tabs, keeping normal usage and reset planning focused
 while all automation controls remain together in Settings.
 
-<img src="docs/screenshots/banked-reset-safety-net-settings.png" width="420" alt="Banked Reset Safety Net Settings tab">
+<img src="docs/screenshots/usage-rhythm-settings.png" width="720" alt="Banked Reset Safety Net Settings tab">
 
 These 2x PNG screenshots use live, read-only Codex data with an isolated application-data
 directory. Automatic use is off for every automatically discovered home and the lead time is the
@@ -79,8 +79,8 @@ Windows x64 and ARM64 have separate feeds and installers so an update cannot cro
 ## Normal usage and pacing
 
 Codex can return the standard Codex limit alongside model-specific limits. Banked Reset Safety Net
-shows only the standard Codex primary and secondary windows, keeping model-specific buckets such as
-GPT-5.3-Codex out of the menu-bar view. A line reports:
+shows only the standard Codex window, keeping model-specific buckets such as GPT-5.3-Codex out of
+the menu-bar view. The rhythm view reports:
 
 - percent used and percent remaining;
 - the window length supplied by Codex;
@@ -97,8 +97,10 @@ point assumes the current average rate continues. It is recalculated from each r
 
 ## Banked-reset planning
 
-The banked-reset schedule uses the standard Codex primary window for its advisory projection. For
-each available reset it shows:
+The reset calendar begins on a local Monday and extends through the last banked expiry. It plots the
+normal reset interval supplied by Codex, each banked recommendation, and each final expiry without
+inventing dates when Codex has not supplied a usable interval. For each available reset it also
+shows:
 
 - the expiry timestamp and countdown;
 - `expiry − configured lead time` as the latest safe use-by point; and
@@ -205,7 +207,7 @@ publishes a GitHub release only after every artifact and the macOS security chec
 - development and built macOS tray UI through the real accessibility tree
 - isolated first-run UI with automatic use off across automatically discovered Codex homes
 - renderer sandbox, context isolation, CommonJS preload bridge, and CSP
-- thirteen test files / forty-four tests, including pacing, planning, display filtering,
+- fourteen test files / forty-six tests, including pacing, calendar layout, display filtering,
   exact-credit, one-hour, lock,
   fail-closed ledger, no-auto-use, and single-click tray cases
 - deterministic macOS and Windows icons generated from the checked-in logo source

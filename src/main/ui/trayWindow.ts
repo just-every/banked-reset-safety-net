@@ -2,8 +2,8 @@ import path from 'node:path'
 import { BrowserWindow, screen, type Rectangle, type Tray } from 'electron'
 import { getTrayClickAction } from './trayInteraction'
 
-const WINDOW_WIDTH = 420
-const WINDOW_HEIGHT = 700
+const WINDOW_WIDTH = 720
+const WINDOW_HEIGHT = 760
 
 export class TrayWindow {
   readonly browserWindow: BrowserWindow

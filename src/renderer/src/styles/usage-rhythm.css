@@ -1,0 +1,144 @@
+.usage-rhythm-dashboard {
+  width: min(100%, 650px);
+  margin: 0 auto;
+}
+
+.rhythm-header {
+  position: relative;
+  text-align: center;
+}
+
+.rhythm-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.rhythm-title h2 {
+  font-size: 22px;
+  font-weight: 560;
+  letter-spacing: -0.025em;
+}
+
+.rhythm-clock,
+.pace-insight-icon {
+  position: relative;
+  display: inline-block;
+  width: 21px;
+  height: 21px;
+  border: 1px solid #d8dbe2;
+  border-radius: 50%;
+}
+
+.rhythm-clock::before,
+.rhythm-clock::after,
+.pace-insight-icon::before,
+.pace-insight-icon::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  background: #d8dbe2;
+  transform-origin: bottom;
+  content: '';
+}
+
+.rhythm-clock::before,
+.pace-insight-icon::before {
+  height: 6px;
+  transform: translate(-50%, -100%);
+}
+
+.rhythm-clock::after,
+.pace-insight-icon::after {
+  height: 5px;
+  transform: translate(-50%, -100%) rotate(125deg);
+}
+
+.rhythm-header > p {
+  margin-top: 7px;
+  color: #858b96;
+  font-size: 10px;
+}
+
+.rhythm-refresh {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 1px solid #343a44;
+  border-radius: 7px;
+  color: #aeb3bd;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 6px 10px;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.rhythm-refresh:disabled {
+  opacity: 0.55;
+}
+
+.rhythm-profile-tabs {
+  display: flex;
+  max-width: 100%;
+  gap: 4px;
+  margin-top: 14px;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: none;
+}
+
+.rhythm-profile-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.rhythm-profile-tabs button {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 99px;
+  color: #767d88;
+  background: transparent;
+  padding: 5px 10px;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.rhythm-profile-tabs button.is-active {
+  border-color: #373e49;
+  color: #d8dbe1;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.profile-state {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #707783;
+}
+
+.profile-state.is-ready {
+  background: #77c99e;
+}
+
+.profile-state.is-error {
+  background: #d87680;
+}
+
+.rhythm-message {
+  margin-top: 14px;
+  border: 1px solid #282e37;
+  border-radius: 9px;
+  color: #858c97;
+  padding: 18px;
+  font-size: 10px;
+  text-align: center;
+}
+
+.rhythm-message.is-error {
+  border-color: rgba(217, 103, 114, 0.28);
+  color: #d98a93;
+}

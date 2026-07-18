@@ -1,6 +1,6 @@
 {
   "name": "banked-reset-net",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A cross-platform tray app for tracking and safely using Codex banked resets before they expire.",
   "author": "Banked Reset Safety Net contributors",
   "repository": {
