@@ -18,11 +18,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "pnpm typecheck && pnpm test && electron-vite build",
-    "dist:mac": "pnpm prepare:icons && pnpm build && electron-builder --mac --universal",
-    "dist:mac:arm64": "pnpm prepare:icons && pnpm build && electron-builder --mac --arm64",
-    "dist:win": "pnpm prepare:icons && pnpm build && electron-builder --win",
-    "dist:win:x64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --x64",
-    "dist:win:arm64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --arm64",
+    "dist:mac": "pnpm prepare:icons && pnpm build && electron-builder --mac --universal --publish never",
+    "dist:mac:arm64": "pnpm prepare:icons && pnpm build && electron-builder --mac --arm64 --publish never",
+    "dist:win": "pnpm prepare:icons && pnpm build && electron-builder --win --publish never",
+    "dist:win:x64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --x64 --publish never",
+    "dist:win:arm64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --arm64 --publish never",
     "probe": "tsx scripts/probe.ts"
   },
   "dependencies": {
