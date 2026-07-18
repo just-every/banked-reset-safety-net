@@ -19,6 +19,8 @@ Signed builds are published on
 Published macOS builds are Developer ID signed, hardened, notarized by Apple, and verified with
 Gatekeeper before the release can be created. Open the DMG and drag Reset Net to Applications.
 Windows artifacts are not yet Authenticode signed, so Microsoft SmartScreen may show a warning.
+Place `SHA256SUMS.txt` beside the downloaded assets and run `shasum -a 256 -c SHA256SUMS.txt`
+on macOS (or `sha256sum -c SHA256SUMS.txt` on Linux) to verify them.
 
 Reset Net runs in the menu bar without a Dock icon. Click its icon/countdown to open the window;
 right-click for Refresh and Quit.
@@ -127,7 +129,7 @@ publishes a GitHub release only after every artifact and the macOS security chec
 - live read-only discovery of four banked resets
 - development and packaged macOS tray UI
 - renderer sandbox, context isolation, CommonJS preload bridge, and CSP
-- ten test files / thirty-one tests, including exact-credit, one-hour, lock, fail-closed ledger,
+- eleven test files / thirty-three tests, including exact-credit, one-hour, lock, fail-closed ledger,
   no-auto-use, and single-click tray cases
 - universal macOS and Windows x64 packaging smoke tests
 - deterministic macOS and Windows icons generated from the checked-in logo source

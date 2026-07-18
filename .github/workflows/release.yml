@@ -123,19 +123,14 @@ jobs:
             release/Reset-Net-*-win-${{ matrix.arch }}.exe
             release/SHA256SUMS-windows-${{ matrix.arch }}.txt
 
-  publish:
-    name: Publish GitHub release
-    if: startsWith(github.ref, 'refs/tags/v')
+  bundle:
+    name: Verify complete release bundle
     needs:
       - validate
       - macos
       - windows
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Check out source
@@ -149,7 +144,40 @@ jobs:
           merge-multiple: true
 
       - name: Verify complete asset set and create combined checksums
-        run: scripts/release/prepare-release-assets.sh dist "${{ needs.validate.outputs.package-version }}"
+        run: node scripts/release/prepare-release-assets.mjs dist "${{ needs.validate.outputs.package-version }}"
+
+      - name: Upload verified release bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-bundle
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-mac-universal.dmg
+            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-mac-universal.zip
+            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-win-x64.exe
+            dist/Reset-Net-${{ needs.validate.outputs.package-version }}-win-arm64.exe
+            dist/SHA256SUMS.txt
+
+  publish:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - validate
+      - bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Download verified release bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: release-bundle
+          path: dist
 
       - name: Publish release
         run: |

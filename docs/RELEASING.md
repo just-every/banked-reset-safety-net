@@ -2,7 +2,7 @@
 
 The release workflow builds three platform targets in parallel: a universal macOS app, a Windows x64 installer, and a Windows ARM64 installer. A GitHub release is published only after every target succeeds and the macOS app passes Developer ID signature, Gatekeeper, and notarization-ticket checks.
 
-Manual workflow runs build and retain the artifacts for inspection. They do not publish a release unless the selected ref is a version tag.
+Manual workflow runs build, assemble, checksum, and retain the complete release bundle for inspection. They do not publish a release unless the selected ref is a version tag.
 
 ## One-time Apple setup
 
@@ -44,7 +44,7 @@ The required secrets are:
 
 ## Test the packaging workflow
 
-Run **Release** from the repository's Actions page on the `main` branch. This exercises all packaging and verification jobs but does not create a GitHub release. Download the retained workflow artifacts and test them on clean machines.
+Run **Release** from the repository's Actions page on the `main` branch. This exercises all packaging, verification, and final-bundle assembly jobs but does not create a GitHub release. Download the retained workflow artifacts and test them on clean machines.
 
 The macOS verification step checks the unpacked app, the app mounted from the DMG, and the app extracted from the ZIP. Each copy must:
 
@@ -67,6 +67,6 @@ git tag -a "v${release_version}" -m "Reset Net v${release_version}"
 git push origin "v${release_version}"
 ```
 
-The workflow rejects a tag that does not exactly equal `v` followed by the `package.json` version. Once the signed/notarized macOS job and both Windows jobs pass, it publishes one GitHub release with the DMG, ZIP, both Windows installers, generated release notes, and a combined `SHA256SUMS.txt` file.
+The workflow rejects a tag that does not exactly equal `v` followed by the `package.json` version. Once the signed/notarized macOS job and both Windows jobs pass, it publishes one GitHub release with the DMG, ZIP, both Windows installers, generated release notes, and a combined `SHA256SUMS.txt` file. Manifest entries are bare filenames, so verification runs from the directory containing the downloaded assets.
 
 If a build or verification step fails, fix the cause before publishing. Do not bypass the signature, Gatekeeper, notarization, artifact-count, or checksum checks.

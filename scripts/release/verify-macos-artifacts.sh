@@ -81,4 +81,9 @@ mounted=0
 ditto -x -k "${zips[0]}" "$zip_directory"
 verify_app "$zip_directory/Reset Net.app"
 
-shasum -a 256 "${dmgs[0]}" "${zips[0]}" > "$release_directory/SHA256SUMS-macos.txt"
+dmg_name="$(basename "${dmgs[0]}")"
+zip_name="$(basename "${zips[0]}")"
+(
+  cd "$release_directory"
+  shasum -a 256 "$dmg_name" "$zip_name" > SHA256SUMS-macos.txt
+)
