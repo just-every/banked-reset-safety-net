@@ -1,4 +1,4 @@
-# Releasing Reset Net
+# Releasing Banked Reset Safety Net
 
 The release workflow builds three platform targets in parallel: a universal macOS app, a Windows
 x64 installer, and a Windows ARM64 installer. A GitHub release is published only after every target
@@ -71,7 +71,7 @@ added to the project, so users may see a Microsoft SmartScreen warning.
 
 ```bash
 release_version="$(node -p "require('./package.json').version")"
-git tag -a "v${release_version}" -m "Reset Net v${release_version}"
+git tag -a "v${release_version}" -m "Banked Reset Safety Net v${release_version}"
 git push origin "v${release_version}"
 ```
 

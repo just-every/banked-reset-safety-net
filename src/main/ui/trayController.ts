@@ -1,4 +1,5 @@
 import { Menu, Tray } from 'electron'
+import { APP_NAME } from '../../shared/branding'
 import { findNextExpiringCredit, formatTrayCountdown } from '../../shared/time'
 import type { AppViewState } from '../../shared/types'
 import { createTrayIcon } from './trayIcon'
@@ -15,15 +16,15 @@ export class TrayController {
     quit: () => void
   ) {
     this.tray = new Tray(createTrayIcon())
-    this.tray.setToolTip('Reset Net')
+    this.tray.setToolTip(APP_NAME)
     if (process.platform === 'darwin') this.tray.setIgnoreDoubleClickEvents(true)
     this.tray.on('click', () => this.window.toggle(this.tray))
     this.tray.on('right-click', () => {
       const menu = Menu.buildFromTemplate([
-        { label: 'Show Reset Net', click: () => this.window.show(this.tray) },
+        { label: `Show ${APP_NAME}`, click: () => this.window.show(this.tray) },
         { label: 'Refresh now', click: refresh },
         { type: 'separator' },
-        { label: 'Quit Reset Net', click: quit }
+        { label: `Quit ${APP_NAME}`, click: quit }
       ])
       this.tray.popUpContextMenu(menu)
     })
@@ -44,7 +45,7 @@ export class TrayController {
     const next = this.state ? findNextExpiringCredit(this.state.profiles) : null
     if (!next?.credit.expiresAt) {
       if (process.platform === 'darwin') this.tray.setTitle('')
-      this.tray.setToolTip('Reset Net — no expiring reset found')
+      this.tray.setToolTip(`${APP_NAME} — no expiring reset found`)
       return
     }
 
@@ -53,6 +54,6 @@ export class TrayController {
     const profile = this.state?.settings.profiles.find(
       (candidate) => candidate.id === next.profileId
     )
-    this.tray.setToolTip(`Reset Net — ${profile?.name ?? 'Codex'} expires in ${countdown}`)
+    this.tray.setToolTip(`${APP_NAME} — ${profile?.name ?? 'Codex'} expires in ${countdown}`)
   }
 }

@@ -258,7 +258,7 @@ export class AutomationRunner {
     }
 
     if (outcome === 'nothingToReset') {
-      const message = `${profile.name}: usage did not need resetting yet; Reset Net will retry before expiry.`
+      const message = `${profile.name}: usage did not need resetting yet; Banked Reset Safety Net will retry before expiry.`
       await this.options.ledger.addEvent(profile.id, credit.id, 'info', message)
       if (this.options.ledger.getRecord(profile.id, credit.id)?.attempts === 1) {
         this.options.notify({ title: 'Reset not needed yet', body: message })

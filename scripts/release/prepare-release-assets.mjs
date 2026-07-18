@@ -10,13 +10,13 @@ export async function prepareReleaseAssets(distributionDirectory, version) {
   }
 
   const artifacts = [
-    'Reset-Net-mac-universal.dmg',
-    'Reset-Net-mac-universal.zip',
-    'Reset-Net-mac-universal.zip.blockmap',
-    'Reset-Net-win-x64.exe',
-    'Reset-Net-win-x64.exe.blockmap',
-    'Reset-Net-win-arm64.exe',
-    'Reset-Net-win-arm64.exe.blockmap',
+    'Banked-Reset-Safety-Net-mac-universal.dmg',
+    'Banked-Reset-Safety-Net-mac-universal.zip',
+    'Banked-Reset-Safety-Net-mac-universal.zip.blockmap',
+    'Banked-Reset-Safety-Net-win-x64.exe',
+    'Banked-Reset-Safety-Net-win-x64.exe.blockmap',
+    'Banked-Reset-Safety-Net-win-arm64.exe',
+    'Banked-Reset-Safety-Net-win-arm64.exe.blockmap',
     'latest-mac.yml',
     'latest.yml',
     'latest-arm64.yml'
@@ -34,17 +34,17 @@ export async function prepareReleaseAssets(distributionDirectory, version) {
     validateUpdateMetadata(
       join(distributionDirectory, 'latest-mac.yml'),
       version,
-      'Reset-Net-mac-universal.zip'
+      'Banked-Reset-Safety-Net-mac-universal.zip'
     ),
     validateUpdateMetadata(
       join(distributionDirectory, 'latest.yml'),
       version,
-      'Reset-Net-win-x64.exe'
+      'Banked-Reset-Safety-Net-win-x64.exe'
     ),
     validateUpdateMetadata(
       join(distributionDirectory, 'latest-arm64.yml'),
       version,
-      'Reset-Net-win-arm64.exe'
+      'Banked-Reset-Safety-Net-win-arm64.exe'
     )
   ])
 

@@ -35,7 +35,7 @@ export async function resolveCodexExecutable(configuredPath: string): Promise<st
   if (nativePackageError) throw nativePackageError
 
   throw new Error(
-    'Could not find the Codex CLI. Set its executable path in Reset Net settings.'
+    'Could not find the Codex CLI. Set its executable path in Banked Reset Safety Net settings.'
   )
 }
 

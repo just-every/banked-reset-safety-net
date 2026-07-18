@@ -1,6 +1,6 @@
 # Automatic-use safety contract
 
-Using a banked reset is irreversible. Reset Net keeps discovery and redemption in separate code
+Using a banked reset is irreversible. Banked Reset Safety Net keeps discovery and redemption in separate code
 paths, defaults every profile to read-only behavior, and applies the checks below before the only
 production consume call.
 
@@ -24,12 +24,12 @@ An automatic request is eligible only when all of these remain true:
 8. settings do not change while the request is being prepared; and
 9. no more than 60 minutes remain before expiry, checked again immediately before consumption.
 
-The consumer API requires a non-empty credit ID. Reset Net never asks the backend to choose an
+The consumer API requires a non-empty credit ID. Banked Reset Safety Net never asks the backend to choose an
 unspecified "next" credit.
 
 ## Durable idempotency
 
-Before sending a request, Reset Net derives one deterministic UUID from the backend credit ID and
+Before sending a request, Banked Reset Safety Net derives one deterministic UUID from the backend credit ID and
 expiry. The identity does not include the local profile, so two `CODEX_HOME`s exposing the same
 account credit reuse the same UUID. If the app loses the response after sending, it can safely ask
 about the same logical attempt rather than constructing a second attempt.
@@ -49,7 +49,7 @@ Unknown outcomes are errors; there is no fallback redemption path.
 
 ## Retry timing
 
-If Codex says usage does not currently need resetting, Reset Net retries the same credit and
+If Codex says usage does not currently need resetting, Banked Reset Safety Net retries the same credit and
 idempotency key every five minutes. During the final ten minutes before expiry it retries every
 minute. It never acts after the recorded expiry.
 

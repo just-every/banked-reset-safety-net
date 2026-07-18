@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   buildCreditUsePlans,
   calculateUsagePace,
+  displayUsageLimits,
   formatUsagePercent,
   formatUsageWindowDuration,
-  normalResetTimes
+  selectPlanningLimit
 } from '../src/shared/usage'
-import type { ResetCredit, UsageWindow } from '../src/shared/types'
+import type { ResetCredit, UsageLimit, UsageWindow } from '../src/shared/types'
 
 describe('usage pacing and reset planning', () => {
   const window: UsageWindow = {
@@ -63,8 +64,30 @@ describe('usage pacing and reset planning', () => {
     expect(plans[1].recommendedAt).toBe(18_200)
   })
 
-  it('creates repeated normal reset markers through the banked-reset horizon', () => {
-    expect(normalResetTimes(window, 22_000)).toEqual([10_000, 16_000, 22_000])
+  it('shows and plans from only the normal Codex limit', () => {
+    const modelLimit: UsageLimit = {
+      id: 'gpt-5.3-codex',
+      name: 'GPT-5.3-Codex',
+      primary: window,
+      secondary: null,
+      planType: 'pro',
+      rateLimitReachedType: null
+    }
+    const codexLimit: UsageLimit = {
+      id: 'codex',
+      name: null,
+      primary: window,
+      secondary: null,
+      planType: 'pro',
+      rateLimitReachedType: null
+    }
+
+    expect(displayUsageLimits([modelLimit, codexLimit])).toEqual([codexLimit])
+    expect(selectPlanningLimit([modelLimit])).toBeNull()
+    expect(selectPlanningLimit([modelLimit, codexLimit])).toBe(codexLimit)
+  })
+
+  it('formats usage windows and percentages', () => {
     expect(formatUsageWindowDuration(10_080)).toBe('1-week')
     expect(formatUsageWindowDuration(300)).toBe('5-hour')
     expect(formatUsagePercent(12.25)).toBe('12.3%')

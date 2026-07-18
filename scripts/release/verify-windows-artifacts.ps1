@@ -9,7 +9,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$installers = @(Get-ChildItem -Path $ReleaseDirectory -File -Filter "Reset-Net-win-$Architecture.exe")
+$installers = @(Get-ChildItem -Path $ReleaseDirectory -File -Filter "Banked-Reset-Safety-Net-win-$Architecture.exe")
 if ($installers.Count -ne 1) {
   throw "Expected exactly one Windows $Architecture installer, found $($installers.Count)."
 }
@@ -18,7 +18,7 @@ if ($installers[0].Length -eq 0) {
 }
 
 $unpackedDirectoryName = if ($Architecture -eq "x64") { "win-unpacked" } else { "win-arm64-unpacked" }
-$application = Join-Path (Join-Path $ReleaseDirectory $unpackedDirectoryName) "Reset Net.exe"
+$application = Join-Path (Join-Path $ReleaseDirectory $unpackedDirectoryName) "Banked Reset Safety Net.exe"
 if (-not (Test-Path -Path $application -PathType Leaf)) {
   throw "Packaged Windows application is missing at $application."
 }

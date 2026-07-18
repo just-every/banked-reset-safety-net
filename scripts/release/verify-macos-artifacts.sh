@@ -3,11 +3,11 @@
 set -euo pipefail
 
 release_directory="${1:-release}"
-app="$release_directory/mac-universal/Reset Net.app"
+app="$release_directory/mac-universal/Banked Reset Safety Net.app"
 
 verify_app() {
   local candidate="$1"
-  local executable="$candidate/Contents/MacOS/Reset Net"
+  local executable="$candidate/Contents/MacOS/Banked Reset Safety Net"
   local architectures
   local signature
   local team_identifier
@@ -53,8 +53,8 @@ fi
 verify_app "$app"
 
 shopt -s nullglob
-dmgs=("$release_directory"/Reset-Net-mac-universal.dmg)
-zips=("$release_directory"/Reset-Net-mac-universal.zip)
+dmgs=("$release_directory"/Banked-Reset-Safety-Net-mac-universal.dmg)
+zips=("$release_directory"/Banked-Reset-Safety-Net-mac-universal.zip)
 if (( ${#dmgs[@]} != 1 || ${#zips[@]} != 1 )); then
   echo 'Expected exactly one universal DMG and one universal ZIP.' >&2
   exit 1
@@ -74,12 +74,12 @@ trap cleanup EXIT
 
 hdiutil attach "${dmgs[0]}" -nobrowse -readonly -mountpoint "$mount_directory" -quiet
 mounted=1
-verify_app "$mount_directory/Reset Net.app"
+verify_app "$mount_directory/Banked Reset Safety Net.app"
 hdiutil detach "$mount_directory" -quiet
 mounted=0
 
 ditto -x -k "${zips[0]}" "$zip_directory"
-verify_app "$zip_directory/Reset Net.app"
+verify_app "$zip_directory/Banked Reset Safety Net.app"
 
 dmg_name="$(basename "${dmgs[0]}")"
 zip_name="$(basename "${zips[0]}")"

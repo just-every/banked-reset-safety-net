@@ -1,5 +1,6 @@
 import type { ProfileRuntimeState } from '../../../shared/types'
-import { ResetTimeline } from './ResetTimeline'
+import { displayUsageLimits } from '../../../shared/usage'
+import { BankedResetSchedule } from './BankedResetSchedule'
 import { UsageMeter } from './UsageMeter'
 
 interface ProfileRuntimeProps {
@@ -19,11 +20,13 @@ export function ProfileRuntime({
   if (runtime.status === 'error') return <div className="runtime-message error">{runtime.error}</div>
   if (runtime.status !== 'ready') return <div className="runtime-message">Tracking paused.</div>
 
+  const visibleLimits = displayUsageLimits(runtime.usageLimits)
+
   return (
     <div className="profile-runtime">
-      {runtime.usageLimits.length > 0 ? (
+      {visibleLimits.length > 0 ? (
         <div className="usage-meter-list">
-          {runtime.usageLimits.flatMap((limit) => [
+          {visibleLimits.flatMap((limit) => [
             ...(limit.primary
               ? [
                   <UsageMeter
@@ -52,7 +55,7 @@ export function ProfileRuntime({
         <div className="runtime-message">Codex did not supply normal usage details.</div>
       )}
 
-      <ResetTimeline
+      <BankedResetSchedule
         runtime={runtime}
         leadTimeMinutes={leadTimeMinutes}
         autoRedeemEnabled={autoRedeemEnabled}

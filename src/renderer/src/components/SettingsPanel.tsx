@@ -73,13 +73,13 @@ export function SettingsPanel({ state, run }: SettingsPanelProps): React.JSX.Ele
             <span>Launch in the tray when I sign in</span>
           </label>
           <div className="safety-note">
-            Automatic use is off for every new home. Before any real request, Reset Net re-checks
+            Automatic use is off for every new home. Before any real request, Banked Reset Safety Net re-checks
             the exact credit, expiry, Codex home, and enable switch. Interrupted requests reuse one
             deterministic idempotency key. A cross-process lock prevents overlapping requests, and
             automatic use is hard-limited to the final 60 minutes.
           </div>
           <button type="button" className="text-button danger" onClick={() => void window.resetNet.quit()}>
-            Quit Reset Net
+            Quit Banked Reset Safety Net
           </button>
       </div>
     </section>

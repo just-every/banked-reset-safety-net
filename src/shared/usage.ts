@@ -53,11 +53,11 @@ export function calculateUsagePace(window: UsageWindow, nowSeconds: number): Usa
 }
 
 export function selectPlanningLimit(limits: UsageLimit[]): UsageLimit | null {
-  return (
-    limits.find((limit) => limit.id === 'codex' && limit.primary !== null) ??
-    limits.find((limit) => limit.primary !== null) ??
-    null
-  )
+  return limits.find((limit) => limit.id === 'codex' && limit.primary !== null) ?? null
+}
+
+export function displayUsageLimits(limits: UsageLimit[]): UsageLimit[] {
+  return limits.filter((limit) => limit.id === 'codex')
 }
 
 export function buildCreditUsePlans(
@@ -108,31 +108,6 @@ export function buildCreditUsePlans(
             : 0
       }
     })
-}
-
-export function normalResetTimes(
-  window: UsageWindow,
-  horizonSeconds: number,
-  maximumMarkers = 32
-): number[] {
-  if (
-    window.resetsAt === null ||
-    window.windowDurationMinutes === null ||
-    horizonSeconds < window.resetsAt
-  ) {
-    return []
-  }
-
-  const intervalSeconds = window.windowDurationMinutes * 60
-  const markers: number[] = []
-  for (
-    let resetAt = window.resetsAt;
-    resetAt <= horizonSeconds && markers.length < maximumMarkers;
-    resetAt += intervalSeconds
-  ) {
-    markers.push(resetAt)
-  }
-  return markers
 }
 
 export function formatUsageWindowDuration(minutes: number | null): string {

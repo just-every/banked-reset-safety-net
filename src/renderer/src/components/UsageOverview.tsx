@@ -1,6 +1,7 @@
 import { findNextExpiringCredit, formatCountdown, formatLocalDateTime } from '../../../shared/time'
 import {
   calculateUsagePace,
+  displayUsageLimits,
   formatUsagePercent,
   formatUsageWindowDuration,
   usagePaceLabel
@@ -109,7 +110,7 @@ function buildOverviewLines(state: AppViewState): OverviewLine[] {
     const profile = state.settings.profiles.find((candidate) => candidate.id === runtime.profileId)
     if (!profile?.enabled) continue
 
-    for (const limit of runtime.usageLimits) {
+    for (const limit of displayUsageLimits(runtime.usageLimits)) {
       if (limit.primary) {
         lines.push({
           key: `${runtime.profileId}:${limit.id}:primary`,

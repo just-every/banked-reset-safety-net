@@ -1,10 +1,11 @@
-# Reset Net
+# Banked Reset Safety Net
 
-Reset Net is a cross-platform tray/menu-bar app for Codex usage windows and banked usage-limit
-resets. It shows how much normal usage remains, when each normal window resets, whether current use
-is ahead of or behind a time-based pace, and when every banked reset should be used before expiry.
+Banked Reset Safety Net is a cross-platform tray/menu-bar app for Codex usage windows and banked
+usage-limit resets. It shows how much normal usage remains, when each normal window resets, whether
+current use is ahead of or behind a time-based pace, and when every banked reset should be used
+before expiry.
 
-**Download latest:** [macOS universal DMG](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Reset-Net-mac-universal.dmg) · [Windows x64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Reset-Net-win-x64.exe) · [Windows ARM64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Reset-Net-win-arm64.exe) · [all release files](https://github.com/just-every/banked-reset-safety-net/releases/latest)
+**Download latest:** [macOS universal DMG](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-mac-universal.dmg) · [Windows x64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-x64.exe) · [Windows ARM64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-arm64.exe) · [all release files](https://github.com/just-every/banked-reset-safety-net/releases/latest)
 
 The macOS version runs in the menu bar. The same Electron application is packaged for Windows x64
 and ARM64.
@@ -14,21 +15,21 @@ and ARM64.
 The top status card summarizes every usage line across every tracked Codex home. Each profile then
 shows its normal usage bars and banked-reset plan.
 
-<img src="docs/screenshots/reset-net-overview.png" width="420" alt="Reset Net usage overview">
+<img src="docs/screenshots/banked-reset-safety-net-overview.png" width="420" alt="Banked Reset Safety Net usage overview">
 
-Every banked reset has its own timeline. Grey lines are normal usage resets, the purple point is the
-best or latest suggested use, and the red line is the banked reset's final expiry.
+Each banked reset has a compact row showing its safe use-by time, expiry countdown, and configured
+safety margin. When current usage is projected to run out first, one optional best-use note appears.
 
-<img src="docs/screenshots/reset-net-planner.png" width="420" alt="Reset Net reset planner">
+<img src="docs/screenshots/banked-reset-safety-net-schedule.png" width="392" alt="Banked Reset Safety Net banked-reset schedule">
 
 Status and configuration now live on separate tabs, keeping normal usage and reset planning focused
 while all automation controls remain together in Settings.
 
-<img src="docs/screenshots/reset-net-settings.png" width="420" alt="Reset Net Settings tab">
+<img src="docs/screenshots/banked-reset-safety-net-settings.png" width="420" alt="Banked Reset Safety Net Settings tab">
 
-These 2x PNG screenshots use live, read-only Codex data from an isolated first-run configuration.
-Automatic use is off for every automatically discovered home and the lead time is the default 30
-minutes. No reset-consumption request was made while capturing them.
+These 2x PNG screenshots use live, read-only Codex data with an isolated application-data
+directory. Automatic use is off for every automatically discovered home and the lead time is the
+default 30 minutes. No reset-consumption request was made while capturing them.
 
 ## Install
 
@@ -40,17 +41,18 @@ Signed builds are published on
 - Windows ARM64 NSIS installer.
 
 Published macOS builds are Developer ID signed, hardened, notarized by Apple, and verified with
-Gatekeeper before the release can be created. Open the DMG and drag Reset Net to Applications.
+Gatekeeper before the release can be created. Open the DMG and drag Banked Reset Safety Net to
+Applications.
 Windows artifacts are not yet Authenticode signed, so Microsoft SmartScreen may show a warning.
 Place `SHA256SUMS.txt` beside the downloaded assets and run `shasum -a 256 -c SHA256SUMS.txt`
 on macOS (or `sha256sum -c SHA256SUMS.txt` on Linux) to verify them.
 
-Reset Net runs in the menu bar without a Dock icon. Click its icon/countdown once to open the
+Banked Reset Safety Net runs in the menu bar without a Dock icon. Click its icon/countdown once to open the
 window; right-click for Refresh and Quit.
 
 ## First run
 
-1. Reset Net looks for the Codex CLI in common npm, Homebrew, ChatGPT app, and `PATH` locations.
+1. Banked Reset Safety Net looks for the Codex CLI in common npm, Homebrew, ChatGPT app, and `PATH` locations.
 2. It scans your user folder for `~/.codex` and sibling `.codex_*` or `.codex-*` directories.
    Inherited `CODEX_HOME` values do not change the desktop app's default.
 3. Use **Scan now** after creating another Codex home, or **Track another Codex home** for a path
@@ -59,7 +61,7 @@ window; right-click for Refresh and Quit.
 5. To automate a home, set the lead time (30 minutes by default), enable **Use automatically**, and
    accept the explicit confirmation.
 6. Enable **Launch in the tray when I sign in** so a sleeping or restarted computer can resume the
-   schedule. Reset Net must be running to act.
+   schedule. Banked Reset Safety Net must be running to act.
 
 Every new profile starts with automatic use disabled. Changing a profile's `CODEX_HOME` also forces
 automatic use off.
@@ -67,7 +69,7 @@ automatic use off.
 ## Automatic app updates
 
 Installed macOS and Windows builds check the latest public GitHub release shortly after startup and
-every four hours while running. A newer release downloads in the background. Reset Net shows the
+every four hours while running. A newer release downloads in the background. Banked Reset Safety Net shows the
 download state in **Settings → App updates**, sends a notification when the signed package is ready,
 and installs it when the app next quits. **Restart and install** applies it immediately.
 
@@ -76,16 +78,16 @@ Windows x64 and ARM64 have separate feeds and installers so an update cannot cro
 
 ## Normal usage and pacing
 
-Codex can return multiple metered limits, such as the standard Codex limit and a model-specific
-limit. Reset Net shows every bucket returned by `rateLimitsByLimitId`, including its primary and
-secondary windows when present. A line reports:
+Codex can return the standard Codex limit alongside model-specific limits. Banked Reset Safety Net
+shows only the standard Codex primary and secondary windows, keeping model-specific buckets such as
+GPT-5.3-Codex out of the menu-bar view. A line reports:
 
 - percent used and percent remaining;
 - the window length supplied by Codex;
 - the exact normal reset time and a live countdown; and
 - a time-based pace status.
 
-For a window of duration `D` ending at `R`, Reset Net derives the start as `R − D`. The expected
+For a window of duration `D` ending at `R`, Banked Reset Safety Net derives the start as `R − D`. The expected
 percentage used now is the percentage of time elapsed in that window. Actual usage more than five
 percentage points above that value is **Over pace**; more than five points below is **Under pace**;
 the middle band is **On pace**.
@@ -95,12 +97,10 @@ point assumes the current average rate continues. It is recalculated from each r
 
 ## Banked-reset planning
 
-The planner uses the standard Codex primary window as its clock and draws repeated normal-reset
-markers through the last banked expiry. Codex supplies the next reset; markers after it are an
-explicit estimate that repeats the supplied window duration. For each available reset it shows:
+The banked-reset schedule uses the standard Codex primary window for its advisory projection. For
+each available reset it shows:
 
 - the expiry timestamp and countdown;
-- which current or future normal-usage window the recommended point falls in;
 - `expiry − configured lead time` as the latest safe use-by point; and
 - an earlier **Best use** point when the current constant-rate projection reaches full usage before
   the natural normal reset.
@@ -112,7 +112,7 @@ only at the configured use-by point inside the final 60 minutes.
 
 ## How it talks to Codex
 
-Reset Net launches the user's installed CLI as:
+Banked Reset Safety Net launches the user's installed CLI as:
 
 ```text
 CODEX_HOME=/path/to/home codex app-server --stdio
@@ -126,7 +126,7 @@ It uses the CLI's structured JSON-RPC API rather than replaying arrow keys in th
 - Automatic requests are hard-limited to the final 60 minutes and hold an exclusive cross-process
   lock keyed by the backend credit and expiry.
 
-Reset Net never reads or copies `auth.json`; authentication remains owned by the Codex CLI. Version
+Banked Reset Safety Net never reads or copies `auth.json`; authentication remains owned by the Codex CLI. Version
 `0.144.5` is the tested baseline because it exposes detailed usage buckets, reset credits, and the
 consume endpoint.
 
@@ -143,8 +143,8 @@ environments. A profile stores only:
 - automatic-use state; and
 - lead time.
 
-Settings and the idempotency/audit ledger live in Electron's normal per-user application-data
-directory:
+To preserve settings and redemption locks across the product rename, application data remains in
+the original directory:
 
 - macOS: `~/Library/Application Support/Reset Net/`
 - Windows: `%APPDATA%\Reset Net\`
@@ -159,6 +159,9 @@ pnpm typecheck
 pnpm test
 pnpm dev
 ```
+
+Set `BANKED_RESET_SAFETY_NET_USER_DATA` to an isolated directory when testing first-run behavior
+without touching the installed app's settings or automation ledger.
 
 Run a real, read-only account probe (the app itself defaults to `~/.codex`):
 
@@ -200,9 +203,10 @@ publishes a GitHub release only after every artifact and the macOS security chec
 - standard and model-specific usage-bucket parsing
 - multiple `CODEX_HOME` sessions polled concurrently
 - development and built macOS tray UI through the real accessibility tree
-- isolated first-run UI with automatic use off and `~/.codex` as the only profile
+- isolated first-run UI with automatic use off across automatically discovered Codex homes
 - renderer sandbox, context isolation, CommonJS preload bridge, and CSP
-- twelve test files / forty tests, including pacing, planning, exact-credit, one-hour, lock,
+- thirteen test files / forty-four tests, including pacing, planning, display filtering,
+  exact-credit, one-hour, lock,
   fail-closed ledger, no-auto-use, and single-click tray cases
 - deterministic macOS and Windows icons generated from the checked-in logo source
 

@@ -20,7 +20,7 @@ export function App(): React.JSX.Element {
   const refreshing = state?.profiles.some((profile) => profile.status === 'loading') ?? false
 
   if (!state) {
-    return <main className="loading-screen">Opening Reset Net…</main>
+    return <main className="loading-screen">Opening Banked Reset Safety Net…</main>
   }
 
   return (
@@ -30,12 +30,12 @@ export function App(): React.JSX.Element {
           ↻
         </div>
         <div>
-          <h1>Reset Net</h1>
+          <h1>Banked Reset Safety Net</h1>
           <p>Codex banked resets</p>
         </div>
       </header>
 
-      <nav className="app-tabs" aria-label="Reset Net sections">
+      <nav className="app-tabs" aria-label="Banked Reset Safety Net sections">
         <button
           type="button"
           className={tab === 'status' ? 'is-active' : ''}
@@ -98,7 +98,7 @@ export function App(): React.JSX.Element {
               <div className="settings-card-heading">
                 <div>
                   <h2>Codex homes</h2>
-                  <p>Reset Net finds ~/.codex and sibling .codex_* or .codex-* folders.</p>
+                  <p>Banked Reset Safety Net finds ~/.codex and sibling .codex_* or .codex-* folders.</p>
                 </div>
                 <button
                   type="button"

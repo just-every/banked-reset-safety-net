@@ -26,7 +26,7 @@ export function ProfileCard({ profile, run }: ProfileCardProps): React.JSX.Eleme
 
     const confirmed = window.confirm(
       `Enable real automatic reset use for “${profile.name}”?\n\n` +
-        `Reset Net will ask Codex to use the earliest banked reset ${profile.leadTimeMinutes} minutes before it expires. ` +
+        `Banked Reset Safety Net will ask Codex to use the earliest banked reset ${profile.leadTimeMinutes} minutes before it expires. ` +
         `It targets that exact reset, holds an exclusive lock, and cannot undo a successful use.`
     )
     if (confirmed) {

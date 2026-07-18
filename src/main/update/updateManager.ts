@@ -1,4 +1,5 @@
 import type { AppUpdater, ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
+import { APP_NAME } from '../../shared/branding'
 import type { UpdateViewState } from '../../shared/types'
 
 const INITIAL_CHECK_DELAY_MS = 10_000
@@ -140,7 +141,7 @@ export class UpdateManager {
       availableVersion: null,
       downloadPercent: null,
       checkedAt: Date.now(),
-      message: `Reset Net ${this.state.currentVersion} is up to date.`
+      message: `${APP_NAME} ${this.state.currentVersion} is up to date.`
     })
   }
 
@@ -150,7 +151,7 @@ export class UpdateManager {
       availableVersion: info.version,
       downloadPercent: 0,
       checkedAt: Date.now(),
-      message: `Downloading Reset Net ${info.version}…`
+      message: `Downloading ${APP_NAME} ${info.version}…`
     })
   }
 
@@ -169,7 +170,7 @@ export class UpdateManager {
       availableVersion: event.version,
       downloadPercent: 100,
       checkedAt: Date.now(),
-      message: `Reset Net ${event.version} is ready. Restart to install it.`
+      message: `${APP_NAME} ${event.version} is ready. Restart to install it.`
     })
     this.options.notifyReady(event.version)
   }

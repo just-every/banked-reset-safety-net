@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { app, dialog, Notification } from 'electron'
 import updaterPackage from 'electron-updater'
+import { APP_NAME, LEGACY_USER_DATA_DIRECTORY } from '../shared/branding'
 import { IPC_CHANNELS } from '../shared/ipc'
 import { AutomationLedger } from './automation/automationLedger'
 import { RedemptionLock } from './automation/redemptionLock'
@@ -11,7 +12,13 @@ import { TrayController } from './ui/trayController'
 import { TrayWindow } from './ui/trayWindow'
 import { installedUpdater, UpdateManager } from './update/updateManager'
 
-app.setName('Reset Net')
+app.setName(APP_NAME)
+app.setPath(
+  'userData',
+  process.env.BANKED_RESET_SAFETY_NET_USER_DATA?.trim()
+    ? path.resolve(process.env.BANKED_RESET_SAFETY_NET_USER_DATA)
+    : path.join(app.getPath('appData'), LEGACY_USER_DATA_DIRECTORY)
+)
 app.setAppUserModelId('net.bankedreset.app')
 
 const { autoUpdater } = updaterPackage
@@ -27,9 +34,7 @@ async function startApplication(): Promise<void> {
   const userData = app.getPath('userData')
   const settings = new SettingsStore(path.join(userData, 'settings.json'))
   const ledger = new AutomationLedger(path.join(userData, 'automation-ledger.json'))
-  const redemptionLock = new RedemptionLock(
-    path.join(app.getPath('appData'), 'Reset Net', 'redemption-locks')
-  )
+  const redemptionLock = new RedemptionLock(path.join(userData, 'redemption-locks'))
   const controller = new ResetController({
     settings,
     ledger,
@@ -49,8 +54,8 @@ async function startApplication(): Promise<void> {
     notifyReady: (version) => {
       if (Notification.isSupported()) {
         new Notification({
-          title: 'Reset Net update ready',
-          body: `Version ${version} will install when you restart Reset Net.`
+          title: `${APP_NAME} update ready`,
+          body: `Version ${version} will install when you restart ${APP_NAME}.`
         }).show()
       }
     }
@@ -59,7 +64,7 @@ async function startApplication(): Promise<void> {
   try {
     await controller.initialize()
   } catch (error) {
-    dialog.showErrorBox('Reset Net could not start', errorMessage(error))
+    dialog.showErrorBox(`${APP_NAME} could not start`, errorMessage(error))
     app.quit()
     return
   }

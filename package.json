@@ -1,8 +1,8 @@
 {
   "name": "banked-reset-net",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A cross-platform tray app for tracking and safely using Codex banked resets before they expire.",
-  "author": "Reset Net contributors",
+  "author": "Banked Reset Safety Net contributors",
   "repository": {
     "type": "git",
     "url": "https://github.com/just-every/banked-reset-safety-net.git"
@@ -56,8 +56,8 @@
   },
   "build": {
     "appId": "net.bankedreset.app",
-    "productName": "Reset Net",
-    "artifactName": "Reset-Net-${os}-${arch}.${ext}",
+    "productName": "Banked Reset Safety Net",
+    "artifactName": "Banked-Reset-Safety-Net-${os}-${arch}.${ext}",
     "directories": {
       "output": "release"
     },

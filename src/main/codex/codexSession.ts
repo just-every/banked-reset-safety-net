@@ -74,7 +74,7 @@ export class CodexSession {
         await this.rpc.request('initialize', {
           clientInfo: {
             name: 'banked_reset_net',
-            title: 'Reset Net',
+            title: 'Banked Reset Safety Net',
             version: CLIENT_VERSION
           },
           capabilities: {

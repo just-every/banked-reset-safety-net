@@ -56,13 +56,13 @@ async function createTemporaryDirectory(): Promise<string> {
 function artifactNames(version: string): string[] {
   void version
   return [
-    'Reset-Net-mac-universal.dmg',
-    'Reset-Net-mac-universal.zip',
-    'Reset-Net-mac-universal.zip.blockmap',
-    'Reset-Net-win-x64.exe',
-    'Reset-Net-win-x64.exe.blockmap',
-    'Reset-Net-win-arm64.exe',
-    'Reset-Net-win-arm64.exe.blockmap',
+    'Banked-Reset-Safety-Net-mac-universal.dmg',
+    'Banked-Reset-Safety-Net-mac-universal.zip',
+    'Banked-Reset-Safety-Net-mac-universal.zip.blockmap',
+    'Banked-Reset-Safety-Net-win-x64.exe',
+    'Banked-Reset-Safety-Net-win-x64.exe.blockmap',
+    'Banked-Reset-Safety-Net-win-arm64.exe',
+    'Banked-Reset-Safety-Net-win-arm64.exe.blockmap',
     'latest-mac.yml',
     'latest.yml',
     'latest-arm64.yml'
@@ -75,9 +75,9 @@ function sha256(value: string): string {
 
 function artifactContent(name: string, index: number, version: string): string {
   const updateTargets: Record<string, string> = {
-    'latest-mac.yml': 'Reset-Net-mac-universal.zip',
-    'latest.yml': 'Reset-Net-win-x64.exe',
-    'latest-arm64.yml': 'Reset-Net-win-arm64.exe'
+    'latest-mac.yml': 'Banked-Reset-Safety-Net-mac-universal.zip',
+    'latest.yml': 'Banked-Reset-Safety-Net-win-x64.exe',
+    'latest-arm64.yml': 'Banked-Reset-Safety-Net-win-arm64.exe'
   }
   const target = updateTargets[name]
   return target ? `version: ${version}\npath: ${target}\n` : `artifact-${index}`
