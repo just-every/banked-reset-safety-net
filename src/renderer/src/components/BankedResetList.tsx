@@ -43,7 +43,7 @@ export function BankedResetList({
                   <p>Expires {formatLocalDateTime(expiry)} · {formatCountdown(expiry, now)}</p>
                 </div>
                 <div className="banked-state">
-                  <strong>{autoRedeemEnabled ? 'Automatic' : 'Available'}</strong>
+                  <strong>Available</strong>
                   <span>{leadTimeMinutes} min safety</span>
                 </div>
               </div>
