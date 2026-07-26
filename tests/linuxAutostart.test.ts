@@ -36,7 +36,9 @@ describe('Linux autostart', () => {
       'Exec="/opt/Banked Reset \\$afety 100%%.AppImage"'
     )
     expect(content).toContain('X-GNOME-Autostart-enabled=true')
-    expect((await stat(desktopEntryPath)).mode & 0o777).toBe(0o600)
+    if (process.platform !== 'win32') {
+      expect((await stat(desktopEntryPath)).mode & 0o777).toBe(0o600)
+    }
     expect(await readdir(path.join(configDirectory, 'autostart'))).toEqual([
       LINUX_AUTOSTART_FILENAME
     ])

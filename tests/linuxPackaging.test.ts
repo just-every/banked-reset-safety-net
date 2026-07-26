@@ -11,10 +11,10 @@ describe('Linux packaging contract', () => {
     const packageJson = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'))
 
     expect(packageJson.scripts['dist:linux:x64']).toBe(
-      'pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --x64 --publish never'
+      'pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --x64 --config.artifactName=Banked-Reset-Safety-Net-linux-x64.\\${ext} --publish never'
     )
     expect(packageJson.scripts['dist:linux:arm64']).toBe(
-      'pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --arm64 --config.publish.channel=latest-arm64 --publish never'
+      'pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --arm64 --config.artifactName=Banked-Reset-Safety-Net-linux-arm64.\\${ext} --config.publish.channel=latest-arm64 --publish never'
     )
     expect(packageJson.build.toolsets.appimage).toBe('1.0.3')
     expect(packageJson.build.linux).toMatchObject({

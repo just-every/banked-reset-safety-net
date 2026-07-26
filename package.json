@@ -23,8 +23,8 @@
     "dist:win": "pnpm prepare:icons && pnpm build && electron-builder --win --publish never",
     "dist:win:x64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --x64 --publish never",
     "dist:win:arm64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --arm64 --config.publish.channel=latest-arm64 --publish never",
-    "dist:linux:x64": "pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --x64 --publish never",
-    "dist:linux:arm64": "pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --arm64 --config.publish.channel=latest-arm64 --publish never",
+    "dist:linux:x64": "pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --x64 --config.artifactName=Banked-Reset-Safety-Net-linux-x64.\\${ext} --publish never",
+    "dist:linux:arm64": "pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --arm64 --config.artifactName=Banked-Reset-Safety-Net-linux-arm64.\\${ext} --config.publish.channel=latest-arm64 --publish never",
     "probe": "tsx scripts/probe.ts"
   },
   "dependencies": {
