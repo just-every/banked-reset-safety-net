@@ -54,6 +54,9 @@
     "vitest": "4.1.10"
   },
   "pnpm": {
+    "overrides": {
+      "fast-uri": "3.1.4"
+    },
     "onlyBuiltDependencies": [
       "electron",
       "electron-winstaller",
