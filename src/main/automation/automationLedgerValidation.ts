@@ -9,6 +9,7 @@ import {
   MAX_LEDGER_EVENTS,
   type AutomationRecord,
   type AutomationRecordStatus,
+  type RedemptionAuthorizationKind,
   type LedgerData
 } from './automationLedgerTypes'
 
@@ -17,7 +18,7 @@ export function parseLedger(value: unknown): LedgerData {
     throw new Error('Automation ledger must be an object.')
   }
   const input = value as Record<string, unknown>
-  if (input.version !== LEDGER_VERSION) {
+  if (input.version !== 1 && input.version !== LEDGER_VERSION) {
     throw new Error(`Unsupported automation ledger version: ${String(input.version)}`)
   }
   if (typeof input.records !== 'object' || input.records === null || Array.isArray(input.records)) {
@@ -27,14 +28,14 @@ export function parseLedger(value: unknown): LedgerData {
 
   const records: Record<string, AutomationRecord> = {}
   for (const [key, record] of Object.entries(input.records)) {
-    records[key] = parseRecord(record)
+    records[key] = parseRecord(record, input.version)
   }
   assertConsistentActiveIdempotency(records)
   const events = input.events.map(parseEvent).slice(0, MAX_LEDGER_EVENTS)
   return { version: LEDGER_VERSION, records, events }
 }
 
-function parseRecord(value: unknown): AutomationRecord {
+function parseRecord(value: unknown, version: 1 | typeof LEDGER_VERSION): AutomationRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     throw new Error('Automation record is invalid.')
   }
@@ -56,6 +57,27 @@ function parseRecord(value: unknown): AutomationRecord {
   }
   if (input.lastError !== null && typeof input.lastError !== 'string') {
     throw new Error('Automation record error is invalid.')
+  }
+  if (version === 1) {
+    return {
+      ...(input as unknown as Omit<
+        AutomationRecord,
+        'accountFingerprint' | 'canonicalCodexHome' | 'authorizationKind'
+      >),
+      accountFingerprint: null,
+      canonicalCodexHome: null,
+      authorizationKind: null
+    }
+  }
+  if (
+    !isNullableString(input.accountFingerprint) ||
+    !isNullableString(input.canonicalCodexHome) ||
+    !isNullableAuthorizationKind(input.authorizationKind)
+  ) {
+    throw new Error('Automation record account binding is invalid.')
+  }
+  if ((input.accountFingerprint === null) !== (input.canonicalCodexHome === null)) {
+    throw new Error('Automation record account binding is incomplete.')
   }
   return input as unknown as AutomationRecord
 }
@@ -79,15 +101,28 @@ function parseEvent(value: unknown): AutomationEvent {
 }
 
 function assertConsistentActiveIdempotency(records: Record<string, AutomationRecord>): void {
-  const keysByIdentity = new Map<string, string>()
+  const bindingsByIdentity = new Map<
+    string,
+    { idempotencyKey: string; accountFingerprint: string | null }
+  >()
   for (const record of Object.values(records)) {
     if (isTerminal(record.status)) continue
     const identity = `${record.creditId}\0${record.creditExpiresAt}`
-    const existing = keysByIdentity.get(identity)
-    if (existing && existing !== record.idempotencyKey) {
+    const existing = bindingsByIdentity.get(identity)
+    if (existing && existing.idempotencyKey !== record.idempotencyKey) {
       throw new Error('Automation ledger has conflicting active idempotency keys for one reset.')
     }
-    keysByIdentity.set(identity, record.idempotencyKey)
+    if (
+      existing?.accountFingerprint &&
+      record.accountFingerprint &&
+      existing.accountFingerprint !== record.accountFingerprint
+    ) {
+      throw new Error('Automation ledger has conflicting account bindings for one reset.')
+    }
+    bindingsByIdentity.set(identity, {
+      idempotencyKey: record.idempotencyKey,
+      accountFingerprint: existing?.accountFingerprint ?? record.accountFingerprint
+    })
   }
 }
 
@@ -107,4 +142,14 @@ function isEventLevel(value: unknown): value is AutomationEventLevel {
 
 function isNullableNumber(value: unknown): value is number | null {
   return value === null || typeof value === 'number'
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === 'string'
+}
+
+function isNullableAuthorizationKind(
+  value: unknown
+): value is RedemptionAuthorizationKind | null {
+  return value === null || value === 'automatic' || value === 'manual'
 }

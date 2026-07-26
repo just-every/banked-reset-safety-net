@@ -1,8 +1,10 @@
 import type { AutomationEvent, ConsumeResetOutcome } from '../../shared/types'
 
-export const LEDGER_VERSION = 1
+export const LEDGER_VERSION = 2
 export const MAX_LEDGER_EVENTS = 200
 export const MAX_LEDGER_RECORDS = 1_000
+
+export type RedemptionAuthorizationKind = 'automatic' | 'manual'
 
 export type AutomationRecordStatus =
   | 'armed'
@@ -24,6 +26,9 @@ export interface AutomationRecord {
   lastOutcome: ConsumeResetOutcome | null
   lastError: string | null
   completedAt: number | null
+  accountFingerprint: string | null
+  canonicalCodexHome: string | null
+  authorizationKind: RedemptionAuthorizationKind | null
 }
 
 export interface LedgerData {

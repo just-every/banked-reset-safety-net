@@ -5,12 +5,14 @@ export interface AppStateController {
   state: AppViewState | null
   error: string | null
   clearError(): void
+  retry(): void
   run(action: () => Promise<void>): Promise<void>
 }
 
 export function useAppState(): AppStateController {
   const [state, setState] = useState<AppViewState | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loadAttempt, setLoadAttempt] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -30,7 +32,7 @@ export function useAppState(): AppStateController {
       active = false
       unsubscribe()
     }
-  }, [])
+  }, [loadAttempt])
 
   const run = useCallback(async (action: () => Promise<void>) => {
     setError(null)
@@ -45,6 +47,10 @@ export function useAppState(): AppStateController {
     state,
     error,
     clearError: () => setError(null),
+    retry: () => {
+      setError(null)
+      setLoadAttempt((attempt) => attempt + 1)
+    },
     run
   }
 }

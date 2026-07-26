@@ -1,6 +1,9 @@
 import type {
   AddProfileInput,
   AppViewState,
+  ManualUseResult,
+  ManualUseReview,
+  ManualUseTypedChallenge,
   UpdateAppSettingsInput,
   UpdateProfileInput
 } from '../shared/types'
@@ -13,7 +16,14 @@ import {
 import { CodexSessionManager } from './codex/sessionManager'
 import { bankedResetHistory, combineResetHistory } from './history/bankedResetHistory'
 import { ResetHistoryStore } from './history/resetHistoryStore'
+import { ExpiryWarningCoordinator } from './notifications/expiryWarningCoordinator'
+import type {
+  ExpiryWarningDeliveryRequest,
+  ExpiryWarningDeliveryResult
+} from './notifications/expiryWarningRunner'
+import { ExpiryWarningStore } from './notifications/expiryWarningStore'
 import { ProfilePoller } from './resets/profilePoller'
+import { ManualRedemptionService } from './manual/manualRedemptionService'
 import { SettingsStore } from './settings/settingsStore'
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1_000
@@ -25,13 +35,20 @@ interface ResetControllerOptions {
   resetHistory: ResetHistoryStore
   redemptionLock: RedemptionLock
   notify: (notification: AutomationNotification) => void
-  setLaunchAtLogin: (enabled: boolean) => void
+  expiryWarningStore: ExpiryWarningStore
+  deliverExpiryWarning: (
+    request: ExpiryWarningDeliveryRequest
+  ) => ExpiryWarningDeliveryResult | Promise<ExpiryWarningDeliveryResult>
+  notificationsSupported: () => boolean
+  setLaunchAtLogin: (enabled: boolean) => void | Promise<void>
 }
 
 export class ResetController {
   private readonly sessions = new CodexSessionManager()
   private readonly poller: ProfilePoller
   private readonly automation: AutomationRunner
+  private readonly manualRedemption: ManualRedemptionService
+  private readonly expiryWarnings: ExpiryWarningCoordinator
   private readonly listeners = new Set<(state: AppViewState) => void>()
   private refreshTimer: NodeJS.Timeout | null = null
   private automationTimer: NodeJS.Timeout | null = null
@@ -50,6 +67,22 @@ export class ResetController {
       onRefreshNeeded: () => this.refresh(),
       notify: options.notify
     })
+    this.manualRedemption = new ManualRedemptionService({
+      settings: options.settings,
+      sessions: this.sessions,
+      executor: this.automation,
+      getResolvedExecutable: () => this.poller.getResolvedExecutable()
+    })
+    this.expiryWarnings = new ExpiryWarningCoordinator({
+      store: options.expiryWarningStore,
+      getProfiles: () => this.options.settings.get().profiles,
+      getRuntimeStates: () =>
+        this.poller.getStates(this.options.settings.get()),
+      isEnabled: () => this.options.settings.get().expiryWarningsEnabled,
+      isSupported: options.notificationsSupported,
+      deliver: options.deliverExpiryWarning,
+      onChange: () => this.emit()
+    })
   }
 
   async initialize(): Promise<void> {
@@ -60,7 +93,8 @@ export class ResetController {
     ])
     this.initialized = true
     const settings = this.options.settings.get()
-    this.options.setLaunchAtLogin(settings.launchAtLogin)
+    await this.options.setLaunchAtLogin(settings.launchAtLogin)
+    await this.expiryWarnings.initialize()
     await this.refresh()
     await this.automation.tick()
 
@@ -79,6 +113,7 @@ export class ResetController {
     const settings = this.options.settings.get()
     return {
       settings,
+      expiryWarnings: this.expiryWarnings.getState(),
       profiles: this.poller.getStates(settings),
       events: this.options.ledger.getEvents(),
       resetHistory: combineResetHistory(
@@ -96,12 +131,22 @@ export class ResetController {
   }
 
   async refresh(): Promise<void> {
+    await this.refreshProfiles(true)
+  }
+
+  startAdvisories(): void {
+    if (!this.initialized) throw new Error('ResetController has not been initialized.')
+    this.expiryWarnings.start()
+  }
+
+  private async refreshProfiles(evaluateExpiryWarnings: boolean): Promise<void> {
     await this.poller.refreshAll(this.options.settings.get())
     const records = this.options.ledger.getRecords()
     await this.options.resetHistory.observeProfiles(
       this.poller.getStates(this.options.settings.get()),
       bankedResetHistory(records)
     )
+    if (evaluateExpiryWarnings) this.expiryWarnings.profilesRefreshed()
     this.emit()
   }
 
@@ -149,13 +194,53 @@ export class ResetController {
     await this.refresh()
   }
 
+  prepareManualUse(profileId: string, creditId: string): Promise<ManualUseReview> {
+    return this.manualRedemption.prepare(profileId, creditId)
+  }
+
+  acknowledgeManualUse(challengeId: string): ManualUseTypedChallenge {
+    return this.manualRedemption.acknowledge(challengeId)
+  }
+
+  confirmManualUse(
+    challengeId: string,
+    exactResponse: string
+  ): Promise<ManualUseResult> {
+    return this.manualRedemption.confirm(challengeId, exactResponse)
+  }
+
+  cancelManualUse(challengeId: string): void {
+    this.manualRedemption.cancel(challengeId)
+  }
+
   async updateAppSettings(input: UpdateAppSettingsInput): Promise<void> {
-    const settings = await this.options.settings.updateAppSettings(input)
-    if (input.launchAtLogin !== undefined) {
-      this.options.setLaunchAtLogin(settings.launchAtLogin)
+    const before = this.options.settings.get()
+    const launchChanged =
+      input.launchAtLogin !== undefined && input.launchAtLogin !== before.launchAtLogin
+    if (launchChanged) await this.options.setLaunchAtLogin(input.launchAtLogin as boolean)
+
+    try {
+      await this.options.settings.updateAppSettings(input)
+    } catch (error) {
+      if (launchChanged) {
+        try {
+          await this.options.setLaunchAtLogin(before.launchAtLogin)
+        } catch (rollbackError) {
+          console.error('Could not roll back launch-at-login after settings failure.', rollbackError)
+        }
+      }
+      throw error
     }
+
+    if (input.expiryWarningsEnabled !== undefined) this.expiryWarnings.settingsChanged()
     this.emit()
     if (input.codexExecutable !== undefined) await this.refresh()
+  }
+
+  async resume(): Promise<void> {
+    await this.refreshProfiles(false)
+    this.expiryWarnings.resumed()
+    await this.automation.tick()
   }
 
   async shutdown(): Promise<void> {
@@ -163,7 +248,7 @@ export class ResetController {
     if (this.automationTimer) clearInterval(this.automationTimer)
     this.refreshTimer = null
     this.automationTimer = null
-    await this.automation.shutdown()
+    await Promise.all([this.automation.shutdown(), this.expiryWarnings.shutdown()])
     await this.sessions.closeAll()
   }
 

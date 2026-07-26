@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  parseAccountReadResult,
   parseConsumeOutcome,
   parseRateLimitsReadResult
 } from '../src/main/codex/protocol'
@@ -50,6 +51,42 @@ describe('Codex app-server protocol normalization', () => {
 
   it('rejects unknown redemption outcomes', () => {
     expect(() => parseConsumeOutcome({ outcome: 'maybe' })).toThrow('Unknown reset outcome')
+  })
+
+  it('parses the read-only ChatGPT account identity and nullable email', () => {
+    expect(
+      parseAccountReadResult({
+        account: { type: 'chatgpt', email: 'person@example.com', planType: 'pro' },
+        requiresOpenaiAuth: true
+      })
+    ).toEqual({
+      account: { type: 'chatgpt', email: 'person@example.com', planType: 'pro' },
+      requiresOpenaiAuth: true
+    })
+    expect(
+      parseAccountReadResult({
+        account: { type: 'chatgpt', email: null, planType: 'pro' },
+        requiresOpenaiAuth: true
+      }).account
+    ).toMatchObject({ type: 'chatgpt', email: null })
+  })
+
+  it('keeps API-key accounts identifier-free and rejects unknown account shapes', () => {
+    expect(
+      parseAccountReadResult({
+        account: { type: 'apiKey' },
+        requiresOpenaiAuth: true
+      })
+    ).toEqual({
+      account: { type: 'apiKey' },
+      requiresOpenaiAuth: true
+    })
+    expect(() =>
+      parseAccountReadResult({
+        account: { type: 'future-auth', email: 'person@example.com' },
+        requiresOpenaiAuth: true
+      })
+    ).toThrow('Unsupported Codex account type')
   })
 })
 

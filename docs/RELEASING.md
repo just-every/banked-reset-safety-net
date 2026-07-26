@@ -1,10 +1,10 @@
 # Releasing Banked Reset Safety Net
 
-The release workflow builds three platform targets in parallel: a universal macOS app, a Windows
-x64 installer, and a Windows ARM64 installer. A GitHub release is published only after every target
-succeeds and the macOS app passes Developer ID signature, Gatekeeper, and notarization-ticket
-checks. Each platform job also produces the update metadata and blockmaps consumed by the installed
-app.
+The release workflow builds five platform targets in parallel: a universal macOS app, Windows x64
+and ARM64 installers, and Linux x64 and ARM64 AppImages. A GitHub release is published only after
+every target succeeds, both Linux targets pass native isolated smoke tests, and the macOS app
+passes Developer ID signature, Gatekeeper, and notarization-ticket checks. Each platform job also
+produces the architecture-specific update metadata and any required blockmaps.
 
 Manual workflow runs build, assemble, checksum, and retain the complete release bundle for inspection. They do not publish a release unless the selected ref is a version tag.
 
@@ -63,6 +63,13 @@ publishes `latest-arm64.yml`. This split is required because both installers sha
 release. Windows artifacts are not Authenticode-signed until a Windows code-signing certificate is
 added to the project, so users may see a Microsoft SmartScreen warning.
 
+The Linux jobs build x64 and ARM64 AppImages on native GitHub-hosted runners. x64 embeds the
+`latest` channel and publishes `latest-linux.yml`; ARM64 embeds `latest-arm64` and publishes
+`latest-arm64-linux-arm64.yml`. Verification extracts the AppImage, checks its ELF architecture,
+desktop metadata, icon and packaged update channel, then runs it under Xvfb with isolated `HOME`,
+`XDG_CONFIG_HOME`, application data, `PATH`, and no `CODEX_HOME`. The smoke must leave an empty
+automation ledger, empty notification records, and default-on expiry warnings.
+
 ## Publish a release
 
 1. Update `package.json` to the intended semantic version and commit the change to `main`.
@@ -76,11 +83,12 @@ git push origin "v${release_version}"
 ```
 
 The workflow rejects a tag that does not exactly equal `v` followed by the `package.json` version.
-Once the signed/notarized macOS job and both Windows jobs pass, it publishes one GitHub release with
-the DMG, ZIP, both Windows installers, updater blockmaps and channel files, generated release notes,
-and a combined `SHA256SUMS.txt` file. The release bundle verifier checks that each channel file
-contains the release version and the correct architecture-specific artifact name. Manifest entries
-are bare filenames, so verification runs from the directory containing the downloaded assets.
+Once all five platform jobs pass, the workflow publishes one GitHub release with the DMG, ZIP,
+both Windows installers, both Linux AppImages, updater blockmaps and channel files, generated
+release notes, and a combined `SHA256SUMS.txt` file. The release bundle verifier checks that every
+channel file contains the release version and correct architecture-specific artifact name.
+Manifest entries are bare filenames, so verification runs from the directory containing the
+downloaded assets.
 
 The primary download filenames intentionally omit the version. This keeps the README's
 `releases/latest/download/...` links stable across releases. The Git tag, release title, app bundle,

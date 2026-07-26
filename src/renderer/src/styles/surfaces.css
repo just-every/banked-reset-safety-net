@@ -31,3 +31,20 @@
   line-height: 1;
   cursor: pointer;
 }
+
+.startup-error {
+  display: grid;
+  width: min(420px, calc(100% - 48px));
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.startup-error strong {
+  color: #f4dce0;
+}
+
+.startup-error [role='alert'] {
+  color: #ffc5cc;
+  line-height: 1.5;
+}

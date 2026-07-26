@@ -1,4 +1,4 @@
-export const SETTINGS_VERSION = 3
+export const SETTINGS_VERSION = 4
 export const DEFAULT_LEAD_TIME_MINUTES = 30
 export const MIN_LEAD_TIME_MINUTES = 1
 export const MAX_LEAD_TIME_MINUTES = 60
@@ -16,8 +16,16 @@ export interface AppSettings {
   version: typeof SETTINGS_VERSION
   codexExecutable: string
   launchAtLogin: boolean
+  expiryWarningsEnabled: boolean
   ignoredCodexHomes: string[]
   profiles: ProfileSettings[]
+}
+
+export type ExpiryWarningStatus = 'active' | 'disabled' | 'unsupported' | 'error'
+
+export interface ExpiryWarningViewState {
+  status: ExpiryWarningStatus
+  message: string
 }
 
 export type UpdateStatus =
@@ -92,6 +100,7 @@ export interface AutomationEvent {
 
 export interface AppViewState {
   settings: AppSettings
+  expiryWarnings: ExpiryWarningViewState
   profiles: ProfileRuntimeState[]
   events: AutomationEvent[]
   resetHistory: import('./resetHistory').ResetHistoryEvent[]
@@ -116,6 +125,38 @@ export interface UpdateProfileInput {
 export interface UpdateAppSettingsInput {
   codexExecutable?: string
   launchAtLogin?: boolean
+  expiryWarningsEnabled?: boolean
 }
 
 export type ConsumeResetOutcome = 'reset' | 'nothingToReset' | 'noCredit' | 'alreadyRedeemed'
+
+export interface ManualUseReview {
+  challengeId: string
+  profile: {
+    id: string
+    name: string
+    codexHome: string
+  }
+  account: {
+    type: 'chatgpt'
+    email: string
+  }
+  credit: {
+    id: string
+    resetType: 'codexRateLimits'
+    title: string | null
+    expiresAt: number
+  }
+  reviewExpiresAt: number
+}
+
+export interface ManualUseTypedChallenge {
+  challengeId: string
+  confirmationPrompt: string
+  confirmationExpiresAt: number
+}
+
+export interface ManualUseResult {
+  outcome: ConsumeResetOutcome
+  message: string
+}

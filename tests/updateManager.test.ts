@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events'
 import type { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  installedUpdater,
   UpdateManager,
   type UpdateAdapter
 } from '../src/main/update/updateManager'
@@ -42,6 +43,19 @@ afterEach(() => {
 })
 
 describe('automatic updates', () => {
+  it('installs the updater only for supported packaged formats', () => {
+    const updater = new FakeUpdater()
+
+    expect(installedUpdater(true, 'darwin', updater as never)).toBe(updater)
+    expect(installedUpdater(true, 'win32', updater as never)).toBe(updater)
+    expect(installedUpdater(true, 'linux', updater as never, '/opt/ResetNet.AppImage')).toBe(
+      updater
+    )
+    expect(installedUpdater(true, 'linux', updater as never)).toBeNull()
+    expect(installedUpdater(true, 'linux', updater as never, 'relative.AppImage')).toBeNull()
+    expect(installedUpdater(false, 'linux', updater as never, '/opt/ResetNet.AppImage')).toBeNull()
+  })
+
   it('checks after startup and configures safe stable automatic downloads', async () => {
     vi.useFakeTimers()
     const updater = new FakeUpdater()

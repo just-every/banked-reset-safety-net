@@ -5,10 +5,10 @@ usage-limit resets. It shows how much normal usage remains, when each normal win
 current use is ahead of or behind a time-based pace, and when every banked reset should be used
 before expiry.
 
-**Download latest:** [macOS universal DMG](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-mac-universal.dmg) · [Windows x64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-x64.exe) · [Windows ARM64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-arm64.exe) · [all release files](https://github.com/just-every/banked-reset-safety-net/releases/latest)
+**Download latest:** [macOS universal DMG](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-mac-universal.dmg) · [Windows x64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-x64.exe) · [Windows ARM64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-arm64.exe) · [Linux x64 AppImage](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-linux-x64.AppImage) · [Linux ARM64 AppImage](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-linux-arm64.AppImage) · [all release files](https://github.com/just-every/banked-reset-safety-net/releases/latest)
 
-The macOS version runs in the menu bar. The same Electron application is packaged for Windows x64
-and ARM64.
+The macOS version runs in the menu bar. The same Electron application is packaged for Windows and
+Linux on x64 and ARM64.
 
 ## What it looks like
 
@@ -42,13 +42,15 @@ Signed builds are published on
 [GitHub Releases](https://github.com/just-every/banked-reset-safety-net/releases):
 
 - macOS universal DMG or ZIP;
-- Windows x64 NSIS installer; or
-- Windows ARM64 NSIS installer.
+- Windows x64 or ARM64 NSIS installer; or
+- Linux x64 or ARM64 AppImage.
 
 Published macOS builds are Developer ID signed, hardened, notarized by Apple, and verified with
 Gatekeeper before the release can be created. Open the DMG and drag Banked Reset Safety Net to
 Applications.
 Windows artifacts are not yet Authenticode signed, so Microsoft SmartScreen may show a warning.
+On Linux, make the AppImage executable (`chmod +x Banked-Reset-Safety-Net-linux-*.AppImage`) and
+run it directly; it does not require root installation.
 Place `SHA256SUMS.txt` beside the downloaded assets and run `shasum -a 256 -c SHA256SUMS.txt`
 on macOS (or `sha256sum -c SHA256SUMS.txt` on Linux) to verify them.
 
@@ -67,7 +69,8 @@ Click its icon/countdown once to open the window; right-click for Refresh and Qu
 4. Leave **Use automatically** off if you only want usage and reset planning.
 5. To automate a home, set the lead time (30 minutes by default), enable **Use automatically**, and
    accept the explicit confirmation.
-6. Enable **Launch in the tray when I sign in** so a sleeping or restarted computer can resume the
+6. Leave **Warn before a banked reset expires** on to receive the default advisory notifications.
+7. Enable **Launch in the tray when I sign in** so a sleeping or restarted computer can resume the
    schedule. Banked Reset Safety Net must be running to act.
 
 Every new profile starts with automatic use disabled. Changing a profile's `CODEX_HOME` also forces
@@ -75,13 +78,30 @@ automatic use off.
 
 ## Automatic app updates
 
-Installed macOS and Windows builds check the latest public GitHub release shortly after startup and
-every four hours while running. A newer release downloads in the background. Banked Reset Safety Net shows the
+Installed macOS, Windows, and Linux AppImage builds check the latest public GitHub release shortly
+after startup and every four hours while running. A newer release downloads in the background. Banked Reset Safety Net shows the
 download state in **Settings → App updates**, sends a notification when the signed package is ready,
 and installs it when the app next quits. **Restart and install** applies it immediately.
 
-Development builds never contact the update feed. macOS updates use the signed universal ZIP;
-Windows x64 and ARM64 have separate feeds and installers so an update cannot cross architectures.
+Development builds never contact the update feed. macOS updates use the signed universal ZIP.
+Windows and Linux use separate x64 and ARM64 feeds so an update cannot cross architectures.
+
+## Expiry warnings
+
+Advisory desktop warnings are enabled by default, independently of automatic use. For each
+available banked reset, the running app warns:
+
+- 24 hours before its exact expiry; and
+- at its configured safety cutoff (`expiry − lead time`).
+
+Starting the app after both thresholds produces only the more urgent cutoff warning. The same
+backend credit exposed by multiple Codex homes is notified once, using its exact type, ID, and
+expiry as the durable identity. Delivery state is stored in `notification-state.json`; failed
+native delivery is retried on a bounded cadence rather than recorded as delivered.
+
+The Settings page shows whether warnings are active, disabled, unsupported, or failing. Clicking a
+warning only opens Banked Reset Safety Net for review. A notification has no path to the consume
+method and never uses a reset. Warnings require the app to be running.
 
 ## Normal usage and pacing
 
@@ -113,7 +133,7 @@ status view. Model-specific rolling buckets are excluded. For a window ending at
 `D`, the applied reset time is `R − D`. The first refresh records
 the active window boundary, so the latest reset can be backfilled even if it happened while the app
 was closed. Later boundary changes are appended to `reset-history.json` with the previous and new
-schedule. Confirmed automatic banked-reset uses remain sourced from `automation-ledger.json`, which
+schedule. Confirmed automatic or manual banked-reset uses remain sourced from `automation-ledger.json`, which
 provides their exact credit identity and completion time. The app never invents unobserved resets.
 
 The reset calendar is navigable by month. It plots durable applied history, the normal reset
@@ -133,6 +153,17 @@ leave room for another credit. A best-use suggestion is advisory: it never chang
 automatic-use schedule. If automation is enabled, the app still acts only at the configured use-by
 point inside the final 60 minutes.
 
+The earliest available row also offers **Use now…**. This deliberately bypasses only the automatic
+timing window. It first opens a fresh review showing the ChatGPT account email, canonical Codex
+home, full credit ID, and exact local and UTC expiry. Continuing creates a second, short-lived typed
+challenge. The final button remains disabled until that generated phrase matches exactly.
+
+Manual early use retains the same exact-earliest-credit, fresh account/home, settings revision,
+exclusive lock, durable idempotency, and immediately-before-write authorization guards as
+automatic use. It fails closed for API-key sessions because they do not provide a stable,
+non-secret account identity for the confirmation. See [docs/SAFETY.md](docs/SAFETY.md) for the
+complete contract.
+
 ## How it talks to Codex
 
 Banked Reset Safety Net launches the user's installed CLI as:
@@ -144,10 +175,13 @@ CODEX_HOME=/path/to/home codex app-server --stdio
 It uses the CLI's structured JSON-RPC API rather than replaying arrow keys in the terminal UI:
 
 - `account/rateLimits/read` discovers normal usage windows, reset IDs, and Unix expiry timestamps.
-- `account/rateLimitResetCredit/consume` is isolated to the automatic-use runner.
+- `account/read` supplies the non-secret ChatGPT account identity used by redemption guards.
+- `account/rateLimitResetCredit/consume` exists at one production call site behind the shared
+  guarded automatic/manual executor.
 - Every consume request includes the exact credit ID and a durable UUID idempotency key.
-- Automatic requests are hard-limited to the final 60 minutes and hold an exclusive cross-process
-  lock keyed by the backend credit and expiry.
+- Automatic requests are hard-limited to the final 60 minutes. Manual requests require the
+  two-confirmation challenge. Both hold an exclusive cross-process lock keyed by the backend credit
+  and expiry.
 
 Banked Reset Safety Net never reads or copies `auth.json`; authentication remains owned by the Codex CLI. Version
 `0.144.5` is the tested baseline because it exposes detailed usage buckets, reset credits, and the
@@ -171,9 +205,11 @@ the original directory:
 
 - macOS: `~/Library/Application Support/Reset Net/`
 - Windows: `%APPDATA%\Reset Net\`
+- Linux: `$XDG_CONFIG_HOME/Reset Net/` (normally `~/.config/Reset Net/`)
 
-That directory contains `reset-history.json` for observed usage-window boundaries and
-`automation-ledger.json` for guarded banked-reset attempts and confirmed uses.
+That directory contains `reset-history.json` for observed usage-window boundaries,
+`automation-ledger.json` for guarded banked-reset attempts and confirmed uses, and
+`notification-state.json` for durable expiry-warning deduplication.
 
 ## Development
 
@@ -220,8 +256,16 @@ pnpm dist:win:x64
 # or: pnpm dist:win:arm64
 ```
 
-CI builds the macOS universal, Windows x64, and Windows ARM64 targets in parallel. A version tag
-publishes a GitHub release only after every artifact and the macOS security checks pass.
+On Linux, build the architecture-matched AppImage with:
+
+```bash
+pnpm dist:linux:x64
+# or, on ARM64: pnpm dist:linux:arm64
+```
+
+CI builds the macOS universal, Windows x64/ARM64, and Linux x64/ARM64 targets in parallel. A
+version tag publishes a GitHub release only after every artifact, native Linux smoke test, updater
+channel check, and macOS security check passes.
 
 ## Verified in this checkout
 
@@ -231,11 +275,12 @@ publishes a GitHub release only after every artifact and the macOS security chec
 - development and built macOS tray UI through the real accessibility tree
 - isolated first-run UI with automatic use off across automatically discovered Codex homes
 - renderer sandbox, context isolation, CommonJS preload bridge, and CSP
-- sixteen test files / fifty-six tests, including pacing, calendar layout, reset-history
-  persistence, banked-history deduplication, display filtering,
-  exact-credit, one-hour, lock,
-  fail-closed ledger, no-auto-use, and single-click tray cases
-- deterministic macOS and Windows icons generated from the checked-in logo source
+- twenty-eight test files / 157 tests, including renderer interaction, two-confirmation manual use,
+  warning selection/deduplication/delivery persistence, Linux packaging/autostart, pacing, calendar
+  layout, reset history, exact-credit/account/home guards, locks, uncertain recovery, and
+  no-auto-use cases
+- deterministic macOS, Windows, and Linux icons generated from the checked-in logo source
+- native x64 and ARM64 AppImage packaging contracts with isolated startup, empty-ledger, default
+  warning, updater-channel, and architecture checks
 
-No live redemption was requested while implementing, testing, or capturing this usage-planning
-update.
+No live redemption was requested while implementing or testing v1.0.

@@ -19,6 +19,9 @@ export function parseSettings(value: unknown): AppSettings {
   if (typeof input.launchAtLogin !== 'boolean') {
     throw new Error('settings.launchAtLogin must be a boolean.')
   }
+  if (typeof input.expiryWarningsEnabled !== 'boolean') {
+    throw new Error('settings.expiryWarningsEnabled must be a boolean.')
+  }
   if (!Array.isArray(input.profiles)) {
     throw new Error('settings.profiles must be an array.')
   }
@@ -39,6 +42,7 @@ export function parseSettings(value: unknown): AppSettings {
     version: SETTINGS_VERSION,
     codexExecutable: input.codexExecutable.trim(),
     launchAtLogin: input.launchAtLogin,
+    expiryWarningsEnabled: input.expiryWarningsEnabled,
     ignoredCodexHomes: uniquePaths(ignoredCodexHomes),
     profiles
   }

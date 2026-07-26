@@ -1,24 +1,33 @@
 import { formatCountdown, formatLocalDateTime } from '../../../shared/time'
 import type { CreditUsePlan } from '../../../shared/creditPlanning'
+import type { ExpiryWarningViewState } from '../../../shared/types'
 
 interface BankedResetListProps {
   plans: CreditUsePlan[]
   leadTimeMinutes: number
   autoRedeemEnabled: boolean
+  expiryWarnings: ExpiryWarningViewState
+  profileId: string
   now: number
+  onPrepareManualUse(profileId: string, creditId: string): void
 }
 
 export function BankedResetList({
   plans,
   leadTimeMinutes,
   autoRedeemEnabled,
+  expiryWarnings,
+  profileId,
+  onPrepareManualUse,
   now
 }: BankedResetListProps): React.JSX.Element {
   return (
     <section className="rhythm-banked-section">
       <div className="rhythm-section-heading">
         <h3><span className="banked-stack-icon" aria-hidden="true" /> Banked resets</h3>
-        <p>{autoRedeemEnabled ? 'Automatic safety enabled' : 'Reminder only'}</p>
+        <p className={`warning-summary is-${expiryWarnings.status}`}>
+          {bankedSafetySummary(autoRedeemEnabled, expiryWarnings.status)}
+        </p>
       </div>
 
       {plans.length === 0 ? (
@@ -52,6 +61,15 @@ export function BankedResetList({
                 <div className="banked-state">
                   <strong>Available</strong>
                   <span>{leadTimeMinutes} min safety</span>
+                  {index === 0 ? (
+                    <button
+                      type="button"
+                      className="manual-use-button"
+                      onClick={() => onPrepareManualUse(profileId, plan.credit.id)}
+                    >
+                      Use now…
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )
@@ -60,4 +78,18 @@ export function BankedResetList({
       )}
     </section>
   )
+}
+
+function bankedSafetySummary(
+  autoRedeemEnabled: boolean,
+  warningStatus: ExpiryWarningViewState['status']
+): string {
+  if (autoRedeemEnabled) {
+    return warningStatus === 'active'
+      ? 'Automatic safety and expiry warnings on'
+      : 'Automatic safety on · expiry warnings need attention'
+  }
+  if (warningStatus === 'active') return 'Expiry warnings on'
+  if (warningStatus === 'disabled') return 'Expiry warnings off'
+  return 'Expiry warning delivery needs attention'
 }

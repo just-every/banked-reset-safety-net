@@ -17,9 +17,13 @@ export async function prepareReleaseAssets(distributionDirectory, version) {
     'Banked-Reset-Safety-Net-win-x64.exe.blockmap',
     'Banked-Reset-Safety-Net-win-arm64.exe',
     'Banked-Reset-Safety-Net-win-arm64.exe.blockmap',
+    'Banked-Reset-Safety-Net-linux-x64.AppImage',
+    'Banked-Reset-Safety-Net-linux-arm64.AppImage',
     'latest-mac.yml',
     'latest.yml',
-    'latest-arm64.yml'
+    'latest-arm64.yml',
+    'latest-linux.yml',
+    'latest-arm64-linux-arm64.yml'
   ].map((name) => join(distributionDirectory, name))
 
   await Promise.all(
@@ -45,6 +49,16 @@ export async function prepareReleaseAssets(distributionDirectory, version) {
       join(distributionDirectory, 'latest-arm64.yml'),
       version,
       'Banked-Reset-Safety-Net-win-arm64.exe'
+    ),
+    validateUpdateMetadata(
+      join(distributionDirectory, 'latest-linux.yml'),
+      version,
+      'Banked-Reset-Safety-Net-linux-x64.AppImage'
+    ),
+    validateUpdateMetadata(
+      join(distributionDirectory, 'latest-arm64-linux-arm64.yml'),
+      version,
+      'Banked-Reset-Safety-Net-linux-arm64.AppImage'
     )
   ])
 

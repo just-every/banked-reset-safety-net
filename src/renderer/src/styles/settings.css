@@ -52,6 +52,49 @@
   line-height: 1.5;
 }
 
+.warning-health {
+  display: flex;
+  gap: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.018);
+  padding: 10px;
+}
+
+.warning-health-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: #6f7585;
+}
+
+.warning-health.is-active .warning-health-dot {
+  background: #55d59d;
+}
+
+.warning-health.is-error .warning-health-dot,
+.warning-health.is-unsupported .warning-health-dot {
+  background: #ef8a71;
+}
+
+.warning-health strong {
+  display: block;
+  color: #c8ccd5;
+  font-size: 10px;
+  font-weight: 550;
+}
+
+.warning-health p,
+.warning-health small {
+  display: block;
+  margin-top: 3px;
+  color: #858b9d;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
 .secondary-button {
   flex: 0 0 auto;
   border: 1px solid #414655;

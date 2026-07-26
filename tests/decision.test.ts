@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { isCreditDue, retryDelayMs, shouldAttemptRecord } from '../src/main/automation/decision'
+import {
+  earliestAvailableCreditFromCredits,
+  isCreditDue,
+  retryDelayMs,
+  shouldAttemptRecord
+} from '../src/main/automation/decision'
 import type { AutomationRecord } from '../src/main/automation/automationLedger'
 import type { ProfileSettings, ResetCredit } from '../src/shared/types'
 
@@ -45,6 +50,21 @@ describe('automation decisions', () => {
     expect(retryDelayMs(10_000, 9_500_000)).toBe(60_000)
     expect(retryDelayMs(10_000, 8_000_000)).toBe(300_000)
   })
+
+  it('selects the true earliest credit independent of backend order', () => {
+    const later = { ...credit, id: 'later', expiresAt: 10_100 }
+    const earlier = { ...credit, id: 'earlier', expiresAt: 10_000 }
+    expect(earliestAvailableCreditFromCredits([later, earlier], 1_000)?.id).toBe('earlier')
+    expect(
+      earliestAvailableCreditFromCredits(
+        [
+          { ...credit, id: 'z-credit' },
+          { ...credit, id: 'a-credit' }
+        ],
+        1_000
+      )?.id
+    ).toBe('a-credit')
+  })
 })
 
 function record(status: AutomationRecord['status']): AutomationRecord {
@@ -59,6 +79,9 @@ function record(status: AutomationRecord['status']): AutomationRecord {
     lastAttemptAt: 1,
     lastOutcome: status === 'redeemed' ? 'reset' : null,
     lastError: null,
-    completedAt: status === 'redeemed' ? 2 : null
+    completedAt: status === 'redeemed' ? 2 : null,
+    accountFingerprint: 'account-1',
+    canonicalCodexHome: '/tmp/codex',
+    authorizationKind: 'automatic'
   }
 }

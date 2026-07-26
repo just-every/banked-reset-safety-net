@@ -24,6 +24,7 @@ describe('multiple Codex homes', () => {
         enabled: true,
         autoRedeemEnabled: false
       })
+      expect(settings.expiryWarningsEnabled).toBe(true)
       expect(settings.profiles[1]).toMatchObject({
         name: 'Codex Zara',
         codexHome: inheritedHome,
@@ -60,12 +61,14 @@ describe('multiple Codex homes', () => {
     const store = new SettingsStore(filePath, home, directory)
     const settings = await store.initialize()
     expect(settings.version).toBe(SETTINGS_VERSION)
+    expect(settings.expiryWarningsEnabled).toBe(true)
     expect(settings.profiles[0]).toMatchObject({
       leadTimeMinutes: 60,
       autoRedeemEnabled: false
     })
     expect(JSON.parse(await readFile(filePath, 'utf8'))).toMatchObject({
       version: SETTINGS_VERSION,
+      expiryWarningsEnabled: true,
       profiles: [{ leadTimeMinutes: 60, autoRedeemEnabled: false }]
     })
   })
@@ -114,6 +117,41 @@ describe('multiple Codex homes', () => {
     })
   })
 
+  it('requires fresh automatic-use confirmation after lead-time or tracking changes', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'reset-net-authorization-change-'))
+    const home = path.join(directory, 'codex-home')
+    await mkdir(home)
+    const initial = settingsWith(home)
+    initial.profiles[0]!.autoRedeemEnabled = true
+    const filePath = path.join(directory, 'settings.json')
+    await writeFile(filePath, JSON.stringify(initial), 'utf8')
+    const store = new SettingsStore(filePath, home, directory)
+    await store.initialize()
+
+    let updated = await store.updateProfile('profile-1', { leadTimeMinutes: 45 })
+    expect(updated.profiles[0]).toMatchObject({
+      leadTimeMinutes: 45,
+      autoRedeemEnabled: false
+    })
+
+    updated = await store.updateProfile('profile-1', {
+      autoRedeemEnabled: true,
+      autoRedeemConfirmed: true
+    })
+    expect(updated.profiles[0]?.autoRedeemEnabled).toBe(true)
+
+    updated = await store.updateProfile('profile-1', { enabled: false })
+    expect(updated.profiles[0]).toMatchObject({
+      enabled: false,
+      autoRedeemEnabled: false
+    })
+    updated = await store.updateProfile('profile-1', { enabled: true })
+    expect(updated.profiles[0]).toMatchObject({
+      enabled: true,
+      autoRedeemEnabled: false
+    })
+  })
+
   it('does not rediscover a home the user removed', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'reset-net-ignore-home-'))
     const defaultHome = path.join(directory, '.codex')
@@ -129,6 +167,46 @@ describe('multiple Codex homes', () => {
     expect(await store.discoverProfiles()).toBe(0)
     expect(store.get().profiles.map((profile) => profile.codexHome)).toEqual([defaultHome])
   })
+
+  it('migrates v3 settings to default-on warnings without discarding ignored homes', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'reset-net-warning-migration-'))
+    const home = path.join(directory, 'codex-home')
+    const ignoredHome = path.join(directory, '.codex_removed')
+    const filePath = path.join(directory, 'settings.json')
+    await mkdir(home)
+    await writeFile(
+      filePath,
+      JSON.stringify({
+        ...settingsWith(home),
+        version: 3,
+        expiryWarningsEnabled: undefined,
+        ignoredCodexHomes: [ignoredHome]
+      }),
+      'utf8'
+    )
+
+    const store = new SettingsStore(filePath, home, path.join(directory, 'no-discovery'))
+    const settings = await store.initialize()
+
+    expect(settings).toMatchObject({
+      version: SETTINGS_VERSION,
+      expiryWarningsEnabled: true,
+      ignoredCodexHomes: [ignoredHome]
+    })
+  })
+
+  it('allows advisory expiry warnings to be disabled independently of automatic use', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'reset-net-warning-setting-'))
+    const home = path.join(directory, 'codex-home')
+    await mkdir(home)
+    const store = new SettingsStore(path.join(directory, 'settings.json'), home, directory)
+    await store.initialize()
+
+    const settings = await store.updateAppSettings({ expiryWarningsEnabled: false })
+
+    expect(settings.expiryWarningsEnabled).toBe(false)
+    expect(settings.profiles[0]?.autoRedeemEnabled).toBe(false)
+  })
 })
 
 function settingsWith(codexHome: string): AppSettings {
@@ -136,6 +214,7 @@ function settingsWith(codexHome: string): AppSettings {
     version: SETTINGS_VERSION,
     codexExecutable: '',
     launchAtLogin: false,
+    expiryWarningsEnabled: true,
     ignoredCodexHomes: [],
     profiles: [
       {

@@ -6,6 +6,12 @@ import type {
   UpdateProfileInput
 } from '../shared/types'
 import type { ResetController } from './resetController'
+import {
+  parseManualAcknowledgeArguments,
+  parseManualCancelArguments,
+  parseManualConfirmArguments,
+  parseManualPrepareArguments
+} from './manual/manualRedemptionIpc'
 import type { UpdateManager } from './update/updateManager'
 
 export function registerIpcHandlers(
@@ -44,6 +50,22 @@ export function registerIpcHandlers(
     return result.canceled ? null : (result.filePaths[0] ?? null)
   })
   ipcMain.handle(IPC_CHANNELS.discoverCodexHomes, () => controller.discoverCodexHomes())
+  ipcMain.handle(IPC_CHANNELS.prepareManualUse, (_event, ...values: unknown[]) => {
+    const { profileId, creditId } = parseManualPrepareArguments(values)
+    return controller.prepareManualUse(profileId, creditId)
+  })
+  ipcMain.handle(IPC_CHANNELS.acknowledgeManualUse, (_event, ...values: unknown[]) => {
+    const { challengeId } = parseManualAcknowledgeArguments(values)
+    return controller.acknowledgeManualUse(challengeId)
+  })
+  ipcMain.handle(IPC_CHANNELS.confirmManualUse, (_event, ...values: unknown[]) => {
+    const { challengeId, exactResponse } = parseManualConfirmArguments(values)
+    return controller.confirmManualUse(challengeId, exactResponse)
+  })
+  ipcMain.handle(IPC_CHANNELS.cancelManualUse, (_event, ...values: unknown[]) => {
+    const { challengeId } = parseManualCancelArguments(values)
+    controller.cancelManualUse(challengeId)
+  })
   ipcMain.handle(IPC_CHANNELS.getUpdateState, () => updateManager.getState())
   ipcMain.handle(IPC_CHANNELS.checkForUpdates, () => updateManager.check())
   ipcMain.handle(IPC_CHANNELS.installUpdate, installUpdate)
@@ -101,6 +123,12 @@ function parseUpdateAppSettingsInput(value: unknown): UpdateAppSettingsInput {
   }
   if (input.launchAtLogin !== undefined) {
     parsed.launchAtLogin = requireBoolean(input.launchAtLogin, 'launchAtLogin')
+  }
+  if (input.expiryWarningsEnabled !== undefined) {
+    parsed.expiryWarningsEnabled = requireBoolean(
+      input.expiryWarningsEnabled,
+      'expiryWarningsEnabled'
+    )
   }
   return parsed
 }

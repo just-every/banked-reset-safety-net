@@ -49,6 +49,15 @@
   font-size: 8px;
 }
 
+.warning-summary.is-active {
+  color: #73c996;
+}
+
+.warning-summary.is-error,
+.warning-summary.is-unsupported {
+  color: #ef9b78;
+}
+
 .rhythm-banked-section {
   margin-top: 16px;
   padding-top: 15px;
@@ -122,6 +131,21 @@
   margin-top: 3px;
   color: #7d838e;
   font-size: 8px;
+}
+
+.manual-use-button {
+  margin-top: 6px;
+  border: 1px solid rgba(255, 138, 104, 0.38);
+  border-radius: 6px;
+  color: #ffb29c;
+  background: rgba(159, 60, 35, 0.12);
+  padding: 4px 7px;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.manual-use-button:hover {
+  background: rgba(159, 60, 35, 0.22);
 }
 
 .banked-state {

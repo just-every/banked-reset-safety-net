@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ActivityList } from './components/ActivityList'
 import { AddProfile } from './components/AddProfile'
+import { ManualUseDialog } from './components/ManualUseDialog'
 import { ProfileCard } from './components/ProfileCard'
 import { SettingsPanel } from './components/SettingsPanel'
 import { UpdatePanel } from './components/UpdatePanel'
@@ -8,18 +9,34 @@ import { UsageRhythmDashboard } from './components/UsageRhythmDashboard'
 import { useAppState } from './hooks/useAppState'
 import { useNow } from './hooks/useNow'
 import { useUpdateState } from './hooks/useUpdateState'
+import type { ManualUseReview } from '../../shared/types'
 
 type AppTab = 'status' | 'settings'
 
 export function App(): React.JSX.Element {
-  const { state, error, clearError, run } = useAppState()
+  const { state, error, clearError, retry, run } = useAppState()
   const now = useNow()
   const update = useUpdateState()
   const [tab, setTab] = useState<AppTab>('status')
+  const [manualReview, setManualReview] = useState<ManualUseReview | null>(null)
   const refreshing = state?.profiles.some((profile) => profile.status === 'loading') ?? false
 
   if (!state) {
-    return <main className="loading-screen">Opening Banked Reset Safety Net…</main>
+    return (
+      <main className="loading-screen">
+        {error ? (
+          <div className="startup-error">
+            <strong>Banked Reset Safety Net could not open.</strong>
+            <span role="alert">{error}</span>
+            <button type="button" className="secondary-button" onClick={retry}>
+              Try again
+            </button>
+          </div>
+        ) : (
+          'Opening Banked Reset Safety Net…'
+        )}
+      </main>
+    )
   }
 
   return (
@@ -64,6 +81,11 @@ export function App(): React.JSX.Element {
             now={now}
             refreshing={refreshing}
             onRefresh={() => void run(() => window.resetNet.refresh())}
+            onPrepareManualUse={(profileId, creditId) => {
+              void run(async () => {
+                setManualReview(await window.resetNet.prepareManualUse(profileId, creditId))
+              })
+            }}
           />
         ) : (
           <div className="settings-page">
@@ -96,6 +118,20 @@ export function App(): React.JSX.Element {
           </div>
         )}
       </div>
+      {manualReview ? (
+        <ManualUseDialog
+          review={manualReview}
+          acknowledge={(challengeId) => window.resetNet.acknowledgeManualUse(challengeId)}
+          confirm={(challengeId, exactResponse) =>
+            window.resetNet.confirmManualUse(challengeId, exactResponse)
+          }
+          cancel={(challengeId) => window.resetNet.cancelManualUse(challengeId)}
+          onClose={() => {
+            setManualReview(null)
+            void run(() => window.resetNet.refresh())
+          }}
+        />
+      ) : null}
     </main>
   )
 }

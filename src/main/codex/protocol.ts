@@ -13,6 +13,21 @@ export interface RateLimitsReadResult {
   credits: ResetCredit[] | null
 }
 
+export type CodexAccount =
+  | {
+      type: 'chatgpt'
+      email: string | null
+      planType: string | null
+    }
+  | {
+      type: 'apiKey'
+    }
+
+export interface AccountReadResult {
+  account: CodexAccount | null
+  requiresOpenaiAuth: boolean
+}
+
 export function parseInitializeResult(value: unknown): InitializeResult {
   const input = requireRecord(value, 'initialize result')
   const fields = ['userAgent', 'codexHome', 'platformFamily', 'platformOs'] as const
@@ -42,6 +57,44 @@ export function parseRateLimitsReadResult(value: unknown): RateLimitsReadResult 
     usageLimits,
     availableCount: Number(summary.availableCount),
     credits: summary.credits === null ? null : summary.credits.map(parseCredit)
+  }
+}
+
+export function parseAccountReadResult(value: unknown): AccountReadResult {
+  const response = requireRecord(value, 'account response')
+  if (typeof response.requiresOpenaiAuth !== 'boolean') {
+    throw new Error('account response.requiresOpenaiAuth is invalid.')
+  }
+  if (response.account === null) {
+    return {
+      account: null,
+      requiresOpenaiAuth: response.requiresOpenaiAuth
+    }
+  }
+
+  const account = requireRecord(response.account, 'account response.account')
+  if (account.type === 'apiKey') {
+    return {
+      account: { type: 'apiKey' },
+      requiresOpenaiAuth: response.requiresOpenaiAuth
+    }
+  }
+  if (account.type !== 'chatgpt') {
+    throw new Error(`Unsupported Codex account type: ${String(account.type)}`)
+  }
+  if (account.email !== null && typeof account.email !== 'string') {
+    throw new Error('account response.account.email is invalid.')
+  }
+  if (account.planType !== null && typeof account.planType !== 'string') {
+    throw new Error('account response.account.planType is invalid.')
+  }
+  return {
+    account: {
+      type: 'chatgpt',
+      email: account.email,
+      planType: account.planType
+    },
+    requiresOpenaiAuth: response.requiresOpenaiAuth
   }
 }
 

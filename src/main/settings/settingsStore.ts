@@ -81,9 +81,16 @@ export class SettingsStore {
     if (!profile) throw new Error('Profile not found.')
 
     if (input.name !== undefined) profile.name = normalizeProfileName(input.name)
-    if (input.enabled !== undefined) profile.enabled = input.enabled
+    if (input.enabled !== undefined && input.enabled !== profile.enabled) {
+      profile.enabled = input.enabled
+      profile.autoRedeemEnabled = false
+    }
     if (input.leadTimeMinutes !== undefined) {
-      profile.leadTimeMinutes = normalizeLeadTime(input.leadTimeMinutes)
+      const leadTimeMinutes = normalizeLeadTime(input.leadTimeMinutes)
+      if (leadTimeMinutes !== profile.leadTimeMinutes) {
+        profile.leadTimeMinutes = leadTimeMinutes
+        profile.autoRedeemEnabled = false
+      }
     }
     if (input.codexHome !== undefined) {
       const codexHome = normalizeCodexHome(input.codexHome)
@@ -151,6 +158,9 @@ export class SettingsStore {
       settings.codexExecutable = normalizeCodexExecutable(input.codexExecutable)
     }
     if (input.launchAtLogin !== undefined) settings.launchAtLogin = input.launchAtLogin
+    if (input.expiryWarningsEnabled !== undefined) {
+      settings.expiryWarningsEnabled = input.expiryWarningsEnabled
+    }
     return this.replace(settings)
   }
 
@@ -186,6 +196,7 @@ async function createDefaultSettings(defaultCodexHome: string): Promise<AppSetti
     version: SETTINGS_VERSION,
     codexExecutable: '',
     launchAtLogin: false,
+    expiryWarningsEnabled: true,
     ignoredCodexHomes: [],
     profiles
   }

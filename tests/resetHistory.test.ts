@@ -143,7 +143,10 @@ function record(completedAt: number): AutomationRecord {
     lastAttemptAt: completedAt - 500,
     lastOutcome: 'reset',
     lastError: null,
-    completedAt
+    completedAt,
+    accountFingerprint: 'account-1',
+    canonicalCodexHome: '/tmp/codex',
+    authorizationKind: 'automatic'
   }
 }
 

@@ -3,15 +3,18 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { AutomationLedger } from '../src/main/automation/automationLedger'
+import { requireRedemptionAccountBinding } from '../src/main/automation/accountBinding'
 import {
   AutomationRunner,
   type AutomationSessionGateway
 } from '../src/main/automation/automationRunner'
 import { RedemptionLock } from '../src/main/automation/redemptionLock'
+import type { RedemptionSnapshot } from '../src/main/codex/codexSession'
 import { SettingsStore } from '../src/main/settings/settingsStore'
 import {
   SETTINGS_VERSION,
   type AppSettings,
+  type ConsumeResetOutcome,
   type ProfileRuntimeState,
   type ResetCredit
 } from '../src/shared/types'
@@ -85,7 +88,7 @@ describe('automatic reset runner', () => {
     await runner.tick(now)
 
     expect(gateway.consumes).toHaveLength(0)
-    expect(ledger.getRecord('profile-1', 'credit-1')?.status).toBe('unavailable')
+    expect(ledger.getRecord('profile-1', 'credit-1')).toBeNull()
   })
 
   it('does nothing while automatic use is disabled', async () => {
@@ -112,7 +115,7 @@ describe('automatic reset runner', () => {
 
     await runner.tick(simulatedDueTime)
 
-    expect(gateway.reads).toBe(1)
+    expect(gateway.reads).toBe(0)
     expect(gateway.consumes).toHaveLength(0)
   })
 
@@ -136,33 +139,250 @@ describe('automatic reset runner', () => {
 
     expect(gateway.consumes).toHaveLength(1)
   })
+
+  it('stops when a newly earlier credit appears during final revalidation', async () => {
+    const earlier = {
+      ...credit,
+      id: 'credit-earlier',
+      expiresAt: (credit.expiresAt as number) - 60
+    }
+    const gateway = new RecordingGateway([credit])
+    gateway.creditSnapshots = [[credit], [credit, earlier]]
+    const runner = createRunner(settings, ledger, gateway, runtime, directory)
+
+    await runner.tick(now)
+
+    expect(gateway.consumes).toHaveLength(0)
+    expect(ledger.getRecord('profile-1', credit.id)?.status).toBe('waiting')
+  })
+
+  it('stops when the freshly re-read account changes', async () => {
+    const gateway = new RecordingGateway([credit])
+    gateway.accountEmails = ['first@example.com', 'second@example.com']
+    const runner = createRunner(settings, ledger, gateway, runtime, directory)
+
+    await runner.tick(now)
+
+    expect(gateway.consumes).toHaveLength(0)
+    expect(ledger.getRecord('profile-1', credit.id)?.status).toBe('waiting')
+  })
+
+  it('checks the settings revision synchronously at the actual RPC write', async () => {
+    const gateway = new RecordingGateway([credit])
+    gateway.beforeAuthorization = () =>
+      settings.updateProfile('profile-1', { name: 'Changed at send boundary' }).then(() => undefined)
+    const runner = createRunner(settings, ledger, gateway, runtime, directory)
+
+    await runner.tick(now)
+
+    expect(gateway.consumes).toHaveLength(0)
+    expect(ledger.getRecord('profile-1', credit.id)?.status).toBe('waiting')
+  })
+
+  it('permits a separately verified manual use more than one hour early', async () => {
+    credit = {
+      ...credit,
+      expiresAt: Math.floor(Date.now() / 1_000) + 2 * 60 * 60
+    }
+    await settings.updateProfile('profile-1', { autoRedeemEnabled: false })
+    const gateway = new RecordingGateway([credit])
+    const runner = createRunner(settings, ledger, gateway, runtime, directory)
+    const binding = requireRedemptionAccountBinding(snapshot(home, [credit]))
+
+    const result = await runner.executeManual({
+      profileId: 'profile-1',
+      settingsRevision: settings.getRevision(),
+      codexHome: home,
+      credit,
+      accountBinding: binding
+    })
+
+    expect(result.outcome).toBe('nothingToReset')
+    expect(gateway.consumes).toHaveLength(1)
+    expect(ledger.getRecord('profile-1', credit.id)).toMatchObject({
+      status: 'waiting',
+      authorizationKind: 'manual'
+    })
+
+    await runner.tick(Date.now() + 6 * 60 * 1_000)
+    expect(gateway.consumes).toHaveLength(1)
+  })
+
+  it('fails a manual request when the freshly locked account differs from the review', async () => {
+    credit = {
+      ...credit,
+      expiresAt: Math.floor(Date.now() / 1_000) + 2 * 60 * 60
+    }
+    await settings.updateProfile('profile-1', { autoRedeemEnabled: false })
+    const reviewedBinding = requireRedemptionAccountBinding(
+      snapshot(home, [credit], 'reviewed@example.com')
+    )
+    const gateway = new RecordingGateway([credit])
+    gateway.accountEmails = ['changed@example.com']
+    const runner = createRunner(settings, ledger, gateway, runtime, directory)
+
+    await expect(
+      runner.executeManual({
+        profileId: 'profile-1',
+        settingsRevision: settings.getRevision(),
+        codexHome: home,
+        credit,
+        accountBinding: reviewedBinding
+      })
+    ).rejects.toThrow('confirmed account or canonical home changed')
+    expect(gateway.consumes).toHaveLength(0)
+  })
+
+  it('fails closed when Codex cannot freshly identify the automatic-use account', async () => {
+    const gateway = new RecordingGateway([credit])
+    gateway.accountEmails = [null]
+    const runner = createRunner(settings, ledger, gateway, runtime, directory)
+
+    await runner.tick(now)
+
+    expect(gateway.consumes).toHaveLength(0)
+    expect(ledger.getRecord('profile-1', credit.id)).toBeNull()
+  })
+
+  it('recovers an interrupted bound attempt from the ledger even when the credit disappeared', async () => {
+    const binding = requireRedemptionAccountBinding(snapshot(home, [credit]))
+    const intent = await ledger.ensureIntent('profile-1', credit, binding, now - 10 * 60 * 1_000)
+    await ledger.markAttempt('profile-1', credit.id, 'automatic', now - 6 * 60 * 1_000)
+    await ledger.markError('profile-1', credit.id, 'response lost', now - 6 * 60 * 1_000)
+    const gateway = new RecordingGateway([])
+    const emptyRuntime = { ...runtime, credits: [], availableCount: 0 }
+    const runner = createRunner(settings, ledger, gateway, emptyRuntime, directory)
+
+    await runner.tick(now)
+
+    expect(gateway.consumes).toEqual([
+      { creditId: credit.id, idempotencyKey: intent.idempotencyKey }
+    ])
+    expect(ledger.getRecord('profile-1', credit.id)?.status).toBe('waiting')
+  })
+
+  it('replays an actually interrupted automatic request with the exact original key', async () => {
+    const gateway = new RecordingGateway([credit])
+    gateway.consumeError = new Error('response lost after write')
+    const runner = createRunner(settings, ledger, gateway, runtime, directory)
+
+    await runner.tick(now)
+
+    const uncertain = ledger.getRecord('profile-1', credit.id)
+    expect(uncertain).toMatchObject({ status: 'uncertain', attempts: 1 })
+    expect(gateway.consumes).toHaveLength(0)
+
+    gateway.consumeError = null
+    gateway.freshCredits = []
+    await runner.tick(now + 6 * 60 * 1_000)
+
+    expect(gateway.consumes).toEqual([
+      { creditId: credit.id, idempotencyKey: uncertain?.idempotencyKey }
+    ])
+  })
+
+  it('fails closed for a legacy uncertain record with no binding when the credit is absent', async () => {
+    const legacyPath = path.join(directory, 'legacy-ledger.json')
+    await writeFile(
+      legacyPath,
+      JSON.stringify({
+        version: 1,
+        records: {
+          'profile-1:credit-1': {
+            profileId: 'profile-1',
+            creditId: credit.id,
+            creditExpiresAt: credit.expiresAt,
+            idempotencyKey: 'legacy-key',
+            status: 'uncertain',
+            attempts: 1,
+            createdAt: now - 10 * 60 * 1_000,
+            lastAttemptAt: now - 6 * 60 * 1_000,
+            lastOutcome: null,
+            lastError: 'response lost',
+            completedAt: null
+          }
+        },
+        events: []
+      }),
+      'utf8'
+    )
+    const legacyLedger = new AutomationLedger(legacyPath)
+    await legacyLedger.initialize()
+    const gateway = new RecordingGateway([])
+    const emptyRuntime = { ...runtime, credits: [], availableCount: 0 }
+    const runner = createRunner(settings, legacyLedger, gateway, emptyRuntime, directory)
+
+    await runner.tick(now)
+
+    expect(gateway.consumes).toHaveLength(0)
+    expect(legacyLedger.getRecord('profile-1', credit.id)).toMatchObject({
+      status: 'uncertain',
+      accountFingerprint: null,
+      canonicalCodexHome: null
+    })
+  })
 })
 
 class RecordingGateway implements AutomationSessionGateway {
   reads = 0
   readonly consumes: Array<{ creditId: string; idempotencyKey: string }> = []
+  creditSnapshots: ResetCredit[][] | null = null
+  accountEmails: Array<string | null> = ['test@example.com']
+  beforeAuthorization: (() => Promise<void>) | null = null
+  consumeError: Error | null = null
+  outcome: ConsumeResetOutcome = 'nothingToReset'
 
   constructor(
-    private readonly freshCredits: ResetCredit[],
+    public freshCredits: ResetCredit[],
     private readonly consumeDelayMs = 0
   ) {}
 
-  async readResetCredits(): Promise<{ availableCount: number; credits: ResetCredit[] }> {
+  async readRedemptionSnapshot(profile: {
+    codexHome: string
+  }): Promise<RedemptionSnapshot> {
+    const readIndex = this.reads
     this.reads += 1
-    return { availableCount: this.freshCredits.length, credits: this.freshCredits }
+    const credits =
+      this.creditSnapshots?.[Math.min(readIndex, this.creditSnapshots.length - 1)] ??
+      this.freshCredits
+    const email =
+      this.accountEmails[Math.min(readIndex, this.accountEmails.length - 1)] ?? null
+    return snapshot(profile.codexHome, credits, email)
   }
 
   async consumeCredit(
     _profile: unknown,
     _executable: string,
     creditId: string,
-    idempotencyKey: string
-  ): Promise<'nothingToReset'> {
+    idempotencyKey: string,
+    authorizeBeforeSend: () => void
+  ): Promise<ConsumeResetOutcome> {
+    await this.beforeAuthorization?.()
+    authorizeBeforeSend()
+    if (this.consumeError) throw this.consumeError
     if (this.consumeDelayMs > 0) {
       await new Promise((resolve) => setTimeout(resolve, this.consumeDelayMs))
     }
     this.consumes.push({ creditId, idempotencyKey })
-    return 'nothingToReset'
+    return this.outcome
+  }
+}
+
+function snapshot(
+  canonicalCodexHome: string,
+  credits: ResetCredit[],
+  email: string | null = 'test@example.com'
+): RedemptionSnapshot {
+  return {
+    account: {
+      account: { type: 'chatgpt', email, planType: 'pro' },
+      requiresOpenaiAuth: true
+    },
+    rateLimits: {
+      availableCount: credits.filter((candidate) => candidate.status === 'available').length,
+      credits
+    },
+    canonicalCodexHome
   }
 }
 
@@ -191,6 +411,7 @@ function testSettings(home: string): AppSettings {
     version: SETTINGS_VERSION,
     codexExecutable: '',
     launchAtLogin: false,
+    expiryWarningsEnabled: true,
     ignoredCodexHomes: [],
     profiles: [
       {

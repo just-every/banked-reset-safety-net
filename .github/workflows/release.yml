@@ -127,12 +127,68 @@ jobs:
             release/latest*.yml
             release/SHA256SUMS-windows-${{ matrix.arch }}.txt
 
+  linux:
+    name: Linux ${{ matrix.arch }} AppImage
+    needs: validate
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-24.04
+            metadata: latest-linux.yml
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            metadata: latest-arm64-linux-arm64.yml
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install native smoke-test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends binutils xvfb
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          architecture: ${{ matrix.arch }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Linux ${{ matrix.arch }} AppImage
+        run: pnpm dist:linux:${{ matrix.arch }}
+
+      - name: Verify Linux ${{ matrix.arch }} AppImage
+        run: scripts/release/verify-linux-artifacts.sh "${{ matrix.arch }}"
+
+      - name: Upload Linux ${{ matrix.arch }} release asset
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-linux-${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            release/Banked-Reset-Safety-Net-linux-${{ matrix.arch }}.AppImage
+            release/${{ matrix.metadata }}
+            release/SHA256SUMS-linux-${{ matrix.arch }}.txt
+
   bundle:
     name: Verify complete release bundle
     needs:
       - validate
       - macos
       - windows
+      - linux
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -164,9 +220,13 @@ jobs:
             dist/Banked-Reset-Safety-Net-win-x64.exe.blockmap
             dist/Banked-Reset-Safety-Net-win-arm64.exe
             dist/Banked-Reset-Safety-Net-win-arm64.exe.blockmap
+            dist/Banked-Reset-Safety-Net-linux-x64.AppImage
+            dist/Banked-Reset-Safety-Net-linux-arm64.AppImage
             dist/latest-mac.yml
             dist/latest.yml
             dist/latest-arm64.yml
+            dist/latest-linux.yml
+            dist/latest-arm64-linux-arm64.yml
             dist/SHA256SUMS.txt
 
   publish:
@@ -199,9 +259,13 @@ jobs:
             dist/Banked-Reset-Safety-Net-win-x64.exe.blockmap \
             dist/Banked-Reset-Safety-Net-win-arm64.exe \
             dist/Banked-Reset-Safety-Net-win-arm64.exe.blockmap \
+            dist/Banked-Reset-Safety-Net-linux-x64.AppImage \
+            dist/Banked-Reset-Safety-Net-linux-arm64.AppImage \
             dist/latest-mac.yml \
             dist/latest.yml \
             dist/latest-arm64.yml \
+            dist/latest-linux.yml \
+            dist/latest-arm64-linux-arm64.yml \
             dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \

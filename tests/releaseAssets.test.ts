@@ -45,6 +45,26 @@ describe('release asset manifest', () => {
       'Required release asset is missing or empty'
     )
   })
+
+  it('fails closed when architecture-specific Linux metadata targets the wrong AppImage', async () => {
+    const directory = await createTemporaryDirectory()
+    const version = '9.8.7'
+    const artifacts = artifactNames(version)
+
+    await Promise.all(
+      artifacts.map((name, index) =>
+        writeFile(join(directory, name), artifactContent(name, index, version))
+      )
+    )
+    await writeFile(
+      join(directory, 'latest-arm64-linux-arm64.yml'),
+      `version: ${version}\npath: Banked-Reset-Safety-Net-linux-x64.AppImage\n`
+    )
+
+    await expect(prepareReleaseAssets(directory, version)).rejects.toThrow(
+      'latest-arm64-linux-arm64.yml'
+    )
+  })
 })
 
 async function createTemporaryDirectory(): Promise<string> {
@@ -63,9 +83,13 @@ function artifactNames(version: string): string[] {
     'Banked-Reset-Safety-Net-win-x64.exe.blockmap',
     'Banked-Reset-Safety-Net-win-arm64.exe',
     'Banked-Reset-Safety-Net-win-arm64.exe.blockmap',
+    'Banked-Reset-Safety-Net-linux-x64.AppImage',
+    'Banked-Reset-Safety-Net-linux-arm64.AppImage',
     'latest-mac.yml',
     'latest.yml',
-    'latest-arm64.yml'
+    'latest-arm64.yml',
+    'latest-linux.yml',
+    'latest-arm64-linux-arm64.yml'
   ]
 }
 
@@ -77,7 +101,9 @@ function artifactContent(name: string, index: number, version: string): string {
   const updateTargets: Record<string, string> = {
     'latest-mac.yml': 'Banked-Reset-Safety-Net-mac-universal.zip',
     'latest.yml': 'Banked-Reset-Safety-Net-win-x64.exe',
-    'latest-arm64.yml': 'Banked-Reset-Safety-Net-win-arm64.exe'
+    'latest-arm64.yml': 'Banked-Reset-Safety-Net-win-arm64.exe',
+    'latest-linux.yml': 'Banked-Reset-Safety-Net-linux-x64.AppImage',
+    'latest-arm64-linux-arm64.yml': 'Banked-Reset-Safety-Net-linux-arm64.AppImage'
   }
   const target = updateTargets[name]
   return target ? `version: ${version}\npath: ${target}\n` : `artifact-${index}`

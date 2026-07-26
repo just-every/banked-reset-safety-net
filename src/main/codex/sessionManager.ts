@@ -1,6 +1,6 @@
 import type { ConsumeResetOutcome, ProfileSettings } from '../../shared/types'
 import { comparablePath } from '../paths'
-import { CodexSession } from './codexSession'
+import { CodexSession, type RedemptionSnapshot } from './codexSession'
 import type { RateLimitsReadResult } from './protocol'
 
 interface ManagedSession {
@@ -26,14 +26,22 @@ export class CodexSessionManager {
     return { availableCount, credits }
   }
 
+  async readRedemptionSnapshot(
+    profile: ProfileSettings,
+    executable: string
+  ): Promise<RedemptionSnapshot> {
+    return this.withSession(profile, executable, (session) => session.readRedemptionSnapshot())
+  }
+
   async consumeCredit(
     profile: ProfileSettings,
     executable: string,
     creditId: string,
-    idempotencyKey: string
+    idempotencyKey: string,
+    authorizeBeforeSend: () => void
   ): Promise<ConsumeResetOutcome> {
     return this.withSession(profile, executable, (session) =>
-      session.consumeCredit(creditId, idempotencyKey)
+      session.consumeCredit(creditId, idempotencyKey, authorizeBeforeSend)
     )
   }
 

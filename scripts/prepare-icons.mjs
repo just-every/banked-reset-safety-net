@@ -1,3 +1,4 @@
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +10,7 @@ const CORNER_RADIUS = 224;
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(projectRoot, "build", "logo-source.png");
 const outputPath = path.join(projectRoot, "build", "icon.png");
+const linuxOutputPath = path.join(projectRoot, "build", "icons", `${ICON_SIZE}x${ICON_SIZE}.png`);
 
 const metadata = await sharp(sourcePath).metadata();
 
@@ -26,11 +28,18 @@ const roundedRectangleMask = Buffer.from(`
   </svg>
 `);
 
-await sharp(sourcePath)
+const icon = sharp(sourcePath)
   .resize(ICON_SIZE, ICON_SIZE, { fit: "cover" })
   .ensureAlpha()
   .composite([{ input: roundedRectangleMask, blend: "dest-in" }])
-  .png({ compressionLevel: 9, palette: false })
-  .toFile(outputPath);
+  .png({ compressionLevel: 9, palette: false });
 
-console.log(`Prepared ${path.relative(projectRoot, outputPath)} from ${path.relative(projectRoot, sourcePath)}`);
+await mkdir(path.dirname(linuxOutputPath), { recursive: true });
+await Promise.all([
+  icon.clone().toFile(outputPath),
+  icon.clone().toFile(linuxOutputPath),
+]);
+
+console.log(
+  `Prepared ${path.relative(projectRoot, outputPath)} and ${path.relative(projectRoot, linuxOutputPath)} from ${path.relative(projectRoot, sourcePath)}`,
+);

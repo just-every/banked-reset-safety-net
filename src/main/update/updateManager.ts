@@ -1,3 +1,4 @@
+import path from 'node:path'
 import type { AppUpdater, ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { APP_NAME } from '../../shared/branding'
 import type { UpdateViewState } from '../../shared/types'
@@ -55,7 +56,7 @@ export class UpdateManager {
       checkedAt: null,
       message: options.updater
         ? 'Updates are checked automatically.'
-        : 'Automatic updates are available in installed macOS and Windows builds.'
+        : 'Automatic updates are available in installed macOS, Windows, and AppImage builds.'
     }
     this.setTimeoutFn = options.setTimeout ?? global.setTimeout
     this.clearTimeoutFn = options.clearTimeout ?? global.clearTimeout
@@ -193,7 +194,11 @@ export class UpdateManager {
 export function installedUpdater(
   packaged: boolean,
   platform: NodeJS.Platform,
-  updater: AppUpdater
+  updater: AppUpdater,
+  appImagePath?: string
 ): UpdateAdapter | null {
-  return packaged && (platform === 'darwin' || platform === 'win32') ? updater : null
+  if (!packaged) return null
+  if (platform === 'darwin' || platform === 'win32') return updater
+  const appImage = appImagePath?.trim() ?? ''
+  return platform === 'linux' && path.isAbsolute(appImage) ? updater : null
 }

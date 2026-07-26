@@ -18,6 +18,22 @@ const bridge: ResetNetBridge = {
     ipcRenderer.invoke(IPC_CHANNELS.chooseCodexExecutable) as Promise<string | null>,
   discoverCodexHomes: () =>
     ipcRenderer.invoke(IPC_CHANNELS.discoverCodexHomes) as Promise<number>,
+  prepareManualUse: (profileId, creditId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.prepareManualUse, profileId, creditId) as ReturnType<
+      ResetNetBridge['prepareManualUse']
+    >,
+  acknowledgeManualUse: (challengeId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.acknowledgeManualUse, challengeId) as ReturnType<
+      ResetNetBridge['acknowledgeManualUse']
+    >,
+  confirmManualUse: (challengeId, exactResponse) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.confirmManualUse,
+      challengeId,
+      exactResponse
+    ) as ReturnType<ResetNetBridge['confirmManualUse']>,
+  cancelManualUse: (challengeId) =>
+    ipcRenderer.invoke(IPC_CHANNELS.cancelManualUse, challengeId) as Promise<void>,
   getUpdateState: () =>
     ipcRenderer.invoke(IPC_CHANNELS.getUpdateState) as Promise<UpdateViewState>,
   checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.checkForUpdates) as Promise<void>,

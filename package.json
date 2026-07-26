@@ -1,6 +1,6 @@
 {
   "name": "banked-reset-net",
-  "version": "0.5.3",
+  "version": "1.0.0",
   "description": "A cross-platform tray app for tracking and safely using Codex banked resets before they expire.",
   "author": "Banked Reset Safety Net contributors",
   "repository": {
@@ -23,6 +23,8 @@
     "dist:win": "pnpm prepare:icons && pnpm build && electron-builder --win --publish never",
     "dist:win:x64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --x64 --publish never",
     "dist:win:arm64": "pnpm prepare:icons && pnpm build && electron-builder --win nsis --arm64 --config.publish.channel=latest-arm64 --publish never",
+    "dist:linux:x64": "pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --x64 --publish never",
+    "dist:linux:arm64": "pnpm prepare:icons && pnpm build && electron-builder --linux AppImage --arm64 --config.publish.channel=latest-arm64 --publish never",
     "probe": "tsx scripts/probe.ts"
   },
   "dependencies": {
@@ -32,6 +34,10 @@
     "react-dom": "19.2.7"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/cross-spawn": "6.0.6",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
@@ -40,6 +46,7 @@
     "electron": "43.1.1",
     "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
+    "jsdom": "^29.1.1",
     "sharp": "0.35.3",
     "tsx": "4.23.1",
     "typescript": "7.0.2",
@@ -67,6 +74,9 @@
       "repo": "banked-reset-safety-net",
       "channel": "latest"
     },
+    "toolsets": {
+      "appimage": "1.0.3"
+    },
     "files": [
       "out/**/*",
       "package.json"
@@ -89,6 +99,21 @@
       "target": [
         {
           "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "build/icons/1024x1024.png",
+      "category": "Utility",
+      "executableName": "banked-reset-safety-net",
+      "synopsis": "Track Codex usage windows and safely use banked resets before expiry",
+      "target": [
+        {
+          "target": "AppImage",
           "arch": [
             "x64",
             "arm64"

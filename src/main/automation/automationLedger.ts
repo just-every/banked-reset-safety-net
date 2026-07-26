@@ -7,6 +7,10 @@ import type {
 } from '../../shared/types'
 import { readJsonFile, writeJsonFileAtomic } from '../persistence/jsonFile'
 import {
+  sameAccountBinding,
+  type RedemptionAccountBinding
+} from './accountBinding'
+import {
   idempotencyKeyForIntent,
   isTerminal,
   pruneRecords,
@@ -17,6 +21,7 @@ import {
   emptyLedger,
   MAX_LEDGER_EVENTS,
   type AutomationRecord,
+  type RedemptionAuthorizationKind,
   type LedgerData
 } from './automationLedgerTypes'
 import { parseLedger } from './automationLedgerValidation'
@@ -51,6 +56,7 @@ export class AutomationLedger {
   async ensureIntent(
     profileId: string,
     credit: ResetCredit,
+    binding: RedemptionAccountBinding,
     now = Date.now()
   ): Promise<AutomationRecord> {
     if (credit.expiresAt === null) throw new Error('Cannot arm a reset without an expiry.')
@@ -62,11 +68,13 @@ export class AutomationLedger {
         if (existing.creditExpiresAt !== creditExpiresAt) {
           throw new Error('Stored reset identity does not match the current expiry.')
         }
+        bindOrValidateAccount(existing, binding)
         if (existing.attempts === 0) {
           existing.idempotencyKey = idempotencyKeyForIntent(data, credit, existing)
         }
         return structuredClone(existing)
       }
+      assertCompatibleIdentityBinding(data.records, credit, binding)
 
       const record: AutomationRecord = {
         profileId,
@@ -79,7 +87,10 @@ export class AutomationLedger {
         lastAttemptAt: null,
         lastOutcome: null,
         lastError: null,
-        completedAt: null
+        completedAt: null,
+        accountFingerprint: binding.accountFingerprint,
+        canonicalCodexHome: binding.canonicalCodexHome,
+        authorizationKind: null
       }
       data.records[key] = record
       pruneRecords(data)
@@ -87,13 +98,19 @@ export class AutomationLedger {
     })
   }
 
-  async markAttempt(profileId: string, creditId: string, now = Date.now()): Promise<void> {
+  async markAttempt(
+    profileId: string,
+    creditId: string,
+    authorizationKind: RedemptionAuthorizationKind,
+    now = Date.now()
+  ): Promise<void> {
     await this.mutate((data) => {
       const record = requireRecord(data, profileId, creditId)
       record.attempts += 1
       record.lastAttemptAt = now
       record.lastError = null
       record.status = 'uncertain'
+      record.authorizationKind = authorizationKind
     })
   }
 
@@ -197,5 +214,46 @@ export class AutomationLedger {
 
   private async persist(): Promise<void> {
     await writeJsonFileAtomic(this.filePath, this.requireData())
+  }
+}
+
+function assertCompatibleIdentityBinding(
+  records: Record<string, AutomationRecord>,
+  credit: ResetCredit,
+  binding: RedemptionAccountBinding
+): void {
+  const matching = Object.values(records).find(
+    (record) =>
+      !isTerminal(record.status) &&
+      record.creditId === credit.id &&
+      record.creditExpiresAt === credit.expiresAt &&
+      record.accountFingerprint !== null
+  )
+  if (matching && matching.accountFingerprint !== binding.accountFingerprint) {
+    throw new Error('Stored reset identity is bound to a different Codex account.')
+  }
+}
+
+function bindOrValidateAccount(
+  record: AutomationRecord,
+  binding: RedemptionAccountBinding
+): void {
+  if (record.accountFingerprint === null && record.canonicalCodexHome === null) {
+    record.accountFingerprint = binding.accountFingerprint
+    record.canonicalCodexHome = binding.canonicalCodexHome
+    return
+  }
+  if (
+    record.accountFingerprint === null ||
+    record.canonicalCodexHome === null ||
+    !sameAccountBinding(
+      {
+        accountFingerprint: record.accountFingerprint,
+        canonicalCodexHome: record.canonicalCodexHome
+      },
+      binding
+    )
+  ) {
+    throw new Error('Stored reset account binding does not match the current account.')
   }
 }

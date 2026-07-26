@@ -1,6 +1,9 @@
 import type {
   AddProfileInput,
   AppViewState,
+  ManualUseResult,
+  ManualUseReview,
+  ManualUseTypedChallenge,
   UpdateAppSettingsInput,
   UpdateProfileInput,
   UpdateViewState
@@ -17,6 +20,10 @@ export const IPC_CHANNELS = {
   chooseCodexHome: 'reset-net:choose-codex-home',
   chooseCodexExecutable: 'reset-net:choose-codex-executable',
   discoverCodexHomes: 'reset-net:discover-codex-homes',
+  prepareManualUse: 'reset-net:prepare-manual-use',
+  acknowledgeManualUse: 'reset-net:acknowledge-manual-use',
+  confirmManualUse: 'reset-net:confirm-manual-use',
+  cancelManualUse: 'reset-net:cancel-manual-use',
   getUpdateState: 'reset-net:get-update-state',
   updateStateChanged: 'reset-net:update-state-changed',
   checkForUpdates: 'reset-net:check-for-updates',
@@ -34,6 +41,10 @@ export interface ResetNetBridge {
   chooseCodexHome(): Promise<string | null>
   chooseCodexExecutable(): Promise<string | null>
   discoverCodexHomes(): Promise<number>
+  prepareManualUse(profileId: string, creditId: string): Promise<ManualUseReview>
+  acknowledgeManualUse(challengeId: string): Promise<ManualUseTypedChallenge>
+  confirmManualUse(challengeId: string, exactResponse: string): Promise<ManualUseResult>
+  cancelManualUse(challengeId: string): Promise<void>
   getUpdateState(): Promise<UpdateViewState>
   checkForUpdates(): Promise<void>
   installUpdate(): Promise<void>

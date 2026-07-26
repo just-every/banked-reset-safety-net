@@ -72,11 +72,37 @@ export function SettingsPanel({ state, run }: SettingsPanelProps): React.JSX.Ele
             />
             <span>Launch in the tray when I sign in</span>
           </label>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={state.settings.expiryWarningsEnabled}
+              onChange={(event) =>
+                void run(() =>
+                  window.resetNet.updateSettings({
+                    expiryWarningsEnabled: event.currentTarget.checked
+                  })
+                )
+              }
+            />
+            <span>Warn before a banked reset expires</span>
+          </label>
+          <div
+            className={`warning-health is-${state.expiryWarnings.status}`}
+            role={state.expiryWarnings.status === 'error' ? 'alert' : 'status'}
+          >
+            <span className="warning-health-dot" aria-hidden="true" />
+            <div>
+              <strong>{warningStatusLabel(state.expiryWarnings.status)}</strong>
+              <p>{state.expiryWarnings.message}</p>
+              <small>Notifications only open this app; they never use a reset.</small>
+            </div>
+          </div>
           <div className="safety-note">
-            Automatic use is off for every new home. Before any real request, Banked Reset Safety Net re-checks
-            the exact credit, expiry, Codex home, and enable switch. Interrupted requests reuse one
-            deterministic idempotency key. A cross-process lock prevents overlapping requests, and
-            automatic use is hard-limited to the final 60 minutes.
+            Automatic use is off for every new home. Manual early use requires two main-process
+            confirmations. Before either real request, Banked Reset Safety Net re-checks the exact
+            account, earliest credit, expiry, canonical Codex home, and authorization. Interrupted
+            requests reuse one deterministic idempotency key, and a cross-process lock prevents
+            overlapping requests.
           </div>
           <button type="button" className="text-button danger" onClick={() => void window.resetNet.quit()}>
             Quit Banked Reset Safety Net
@@ -84,4 +110,11 @@ export function SettingsPanel({ state, run }: SettingsPanelProps): React.JSX.Ele
       </div>
     </section>
   )
+}
+
+function warningStatusLabel(status: AppViewState['expiryWarnings']['status']): string {
+  if (status === 'active') return 'Expiry warnings active'
+  if (status === 'disabled') return 'Expiry warnings disabled'
+  if (status === 'unsupported') return 'Expiry warnings unavailable'
+  return 'Expiry warnings need attention'
 }

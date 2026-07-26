@@ -25,8 +25,8 @@ describe('redemption identity and locking', () => {
     const ledger = new AutomationLedger(path.join(directory, 'ledger.json'))
     await ledger.initialize()
     const [first, second] = await Promise.all([
-      ledger.ensureIntent('profile-1', credit()),
-      ledger.ensureIntent('profile-2', credit())
+      ledger.ensureIntent('profile-1', credit(), binding('/tmp/first')),
+      ledger.ensureIntent('profile-2', credit(), binding('/tmp/second'))
     ])
     expect(second.idempotencyKey).toBe(first.idempotencyKey)
   })
@@ -90,4 +90,11 @@ function credit(): ResetCredit {
     title: 'Full reset',
     description: null
   }
+}
+
+function binding(canonicalCodexHome: string): {
+  accountFingerprint: string
+  canonicalCodexHome: string
+} {
+  return { accountFingerprint: 'same-account', canonicalCodexHome }
 }

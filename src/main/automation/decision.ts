@@ -15,15 +15,35 @@ export function earliestAvailableCredit(
   runtime: ProfileRuntimeState,
   nowMs = Date.now()
 ): ResetCredit | null {
+  return earliestAvailableCreditFromCredits(runtime.credits, nowMs)
+}
+
+export function earliestAvailableCreditFromCredits(
+  credits: ResetCredit[],
+  nowMs = Date.now()
+): ResetCredit | null {
   const nowSeconds = nowMs / 1_000
-  return (
-    runtime.credits.find(
+  return credits
+    .filter(
       (credit) =>
         credit.resetType === 'codexRateLimits' &&
         credit.status === 'available' &&
         credit.expiresAt !== null &&
         credit.expiresAt > nowSeconds
-    ) ?? null
+    )
+    .sort(compareCreditOrder)[0] ?? null
+}
+
+export function sameCreditIdentity(
+  left: ResetCredit | null,
+  right: ResetCredit | null
+): boolean {
+  return (
+    left !== null &&
+    right !== null &&
+    left.id === right.id &&
+    left.resetType === right.resetType &&
+    left.expiresAt === right.expiresAt
   )
 }
 
@@ -58,4 +78,10 @@ export function shouldAttemptRecord(
 
 export function retryDelayMs(expiresAtSeconds: number, nowMs = Date.now()): number {
   return expiresAtSeconds * 1_000 - nowMs <= FINAL_WINDOW_MS ? FINAL_RETRY_MS : LONG_RETRY_MS
+}
+
+function compareCreditOrder(left: ResetCredit, right: ResetCredit): number {
+  const expiryDifference = (left.expiresAt as number) - (right.expiresAt as number)
+  if (expiryDifference !== 0) return expiryDifference
+  return left.id.localeCompare(right.id)
 }

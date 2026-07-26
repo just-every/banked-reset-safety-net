@@ -15,6 +15,7 @@ interface UsageRhythmDashboardProps {
   now: number
   refreshing: boolean
   onRefresh(): void
+  onPrepareManualUse(profileId: string, creditId: string): void
 }
 
 interface ProfilePair {
@@ -26,16 +27,14 @@ export function UsageRhythmDashboard({
   state,
   now,
   refreshing,
-  onRefresh
+  onRefresh,
+  onPrepareManualUse
 }: UsageRhythmDashboardProps): React.JSX.Element {
   const pairs = state.settings.profiles.flatMap((profile) => {
     const runtime = state.profiles.find((candidate) => candidate.profileId === profile.id)
     return runtime && profile.enabled ? [{ profile, runtime }] : []
   })
-  const overviewPairs = pairs.filter(
-    ({ runtime }) =>
-      runtime.status === 'ready' && selectPlanningLimit(runtime.usageLimits) !== null
-  )
+  const overviewPairs = pairs.filter(({ runtime }) => runtime.status === 'ready')
   const preferred = overviewPairs[0]
   const [selectedId, setSelectedId] = useState(preferred?.profile.id ?? '')
   const selected = overviewPairs.find(({ profile }) => profile.id === selectedId) ?? preferred
@@ -71,7 +70,9 @@ export function UsageRhythmDashboard({
       <SelectedProfileRhythm
         pair={selected}
         history={state.resetHistory.filter((event) => event.profileId === selected.profile.id)}
+        expiryWarnings={state.expiryWarnings}
         now={now}
+        onPrepareManualUse={onPrepareManualUse}
       />
     </div>
   )
@@ -80,10 +81,14 @@ export function UsageRhythmDashboard({
 function SelectedProfileRhythm({
   pair,
   history,
+  expiryWarnings,
+  onPrepareManualUse,
   now
 }: {
   pair: ProfilePair
   history: AppViewState['resetHistory']
+  expiryWarnings: AppViewState['expiryWarnings']
+  onPrepareManualUse(profileId: string, creditId: string): void
   now: number
 }): React.JSX.Element {
   const { profile, runtime } = pair
@@ -92,17 +97,32 @@ function SelectedProfileRhythm({
   if (runtime.status !== 'ready') return <section className="rhythm-message">Tracking paused.</section>
 
   const usageWindow = selectPlanningLimit(runtime.usageLimits)?.primary ?? null
-  if (!usageWindow) {
-    return <section className="rhythm-message">Codex did not supply its normal usage window.</section>
-  }
-
-  const nextReset = findNextScheduledResetForProfile(runtime, profile, now / 1_000)
   const plans = buildCreditUsePlans(
     runtime.credits,
     usageWindow,
     profile.leadTimeMinutes,
     now / 1_000
   )
+  if (!usageWindow) {
+    return (
+      <>
+        <section className="rhythm-message">
+          Codex did not supply its normal usage window. Available banked resets remain reviewable.
+        </section>
+        <BankedResetList
+          plans={plans}
+          leadTimeMinutes={profile.leadTimeMinutes}
+          autoRedeemEnabled={profile.autoRedeemEnabled}
+          expiryWarnings={expiryWarnings}
+          profileId={profile.id}
+          onPrepareManualUse={onPrepareManualUse}
+          now={now}
+        />
+      </>
+    )
+  }
+
+  const nextReset = findNextScheduledResetForProfile(runtime, profile, now / 1_000)
   const pace = calculateUsagePace(usageWindow, now / 1_000)
 
   return (
@@ -114,6 +134,9 @@ function SelectedProfileRhythm({
         plans={plans}
         leadTimeMinutes={profile.leadTimeMinutes}
         autoRedeemEnabled={profile.autoRedeemEnabled}
+        expiryWarnings={expiryWarnings}
+        profileId={profile.id}
+        onPrepareManualUse={onPrepareManualUse}
         now={now}
       />
       <section className="pace-insight">

@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { app, dialog, Notification } from 'electron'
+import { app, dialog, Notification, powerMonitor } from 'electron'
 import updaterPackage from 'electron-updater'
 import { APP_NAME, LEGACY_USER_DATA_DIRECTORY } from '../shared/branding'
 import { IPC_CHANNELS } from '../shared/ipc'
@@ -7,8 +7,11 @@ import { AutomationLedger } from './automation/automationLedger'
 import { RedemptionLock } from './automation/redemptionLock'
 import { ResetHistoryStore } from './history/resetHistoryStore'
 import { registerIpcHandlers } from './ipc'
+import { DesktopNotifier } from './notifications/desktopNotifier'
+import { ExpiryWarningStore } from './notifications/expiryWarningStore'
 import { ResetController } from './resetController'
 import { SettingsStore } from './settings/settingsStore'
+import { setLinuxAutostart } from './startup/linuxAutostart'
 import { TrayController } from './ui/trayController'
 import { TrayWindow } from './ui/trayWindow'
 import { installedUpdater, UpdateManager } from './update/updateManager'
@@ -37,22 +40,46 @@ async function startApplication(): Promise<void> {
   const ledger = new AutomationLedger(path.join(userData, 'automation-ledger.json'))
   const resetHistory = new ResetHistoryStore(path.join(userData, 'reset-history.json'))
   const redemptionLock = new RedemptionLock(path.join(userData, 'redemption-locks'))
+  const expiryWarningStore = new ExpiryWarningStore(
+    path.join(userData, 'notification-state.json')
+  )
+  const trayWindow = new TrayWindow()
+  let trayController!: TrayController
+  const desktopNotifier = new DesktopNotifier({
+    isSupported: () => Notification.isSupported(),
+    createNotification: ({ title, body }) =>
+      new Notification({ title, body, urgency: 'normal', timeoutType: 'default' }),
+    showApp: () => trayWindow.show(trayController.tray)
+  })
   const controller = new ResetController({
     settings,
     ledger,
     resetHistory,
     redemptionLock,
+    expiryWarningStore,
+    deliverExpiryWarning: desktopNotifier.deliver,
+    notificationsSupported: () => Notification.isSupported(),
     notify: ({ title, body }) => {
       if (Notification.isSupported()) new Notification({ title, body }).show()
     },
-    setLaunchAtLogin: (enabled) => {
+    setLaunchAtLogin: async (enabled) => {
       if (app.isPackaged && (process.platform === 'darwin' || process.platform === 'win32')) {
         app.setLoginItemSettings({ openAtLogin: enabled })
+      } else if (app.isPackaged && process.platform === 'linux') {
+        await setLinuxAutostart(enabled, {
+          configDirectory: app.getPath('appData'),
+          appImagePath: process.env.APPIMAGE ?? ''
+        })
       }
     }
   })
   const updateManager = new UpdateManager({
-    updater: installedUpdater(app.isPackaged, process.platform, autoUpdater),
+    updater: installedUpdater(
+      app.isPackaged,
+      process.platform,
+      autoUpdater,
+      process.env.APPIMAGE
+    ),
     currentVersion: app.getVersion(),
     notifyReady: (version) => {
       if (Notification.isSupported()) {
@@ -63,21 +90,27 @@ async function startApplication(): Promise<void> {
       }
     }
   })
+  trayController = new TrayController(
+    trayWindow,
+    () => void controller.refresh().catch((error) => console.error(error)),
+    () => app.quit()
+  )
 
   try {
     await controller.initialize()
   } catch (error) {
+    await controller.shutdown().catch((shutdownError) => console.error(shutdownError))
+    desktopNotifier.shutdown()
+    trayController.destroy()
+    trayWindow.prepareToQuit()
     dialog.showErrorBox(`${APP_NAME} could not start`, errorMessage(error))
     app.quit()
     return
   }
 
-  const trayWindow = new TrayWindow()
-  const trayController = new TrayController(
-    trayWindow,
-    () => void controller.refresh().catch((error) => console.error(error)),
-    () => app.quit()
-  )
+  const onResume = (): void => {
+    void controller.resume().catch((error) => console.error(error))
+  }
   let shutdownPromise: Promise<void> | null = null
   let shutdownComplete = false
   const shutdown = (): Promise<void> => {
@@ -88,6 +121,8 @@ async function startApplication(): Promise<void> {
     unregisterIpc()
     trayController.destroy()
     updateManager.shutdown()
+    powerMonitor.removeListener('resume', onResume)
+    desktopNotifier.shutdown()
     shutdownPromise = controller.shutdown()
     return shutdownPromise
   }
@@ -109,9 +144,21 @@ async function startApplication(): Promise<void> {
     }
   })
 
+  try {
+    await trayWindow.load()
+  } catch (error) {
+    await shutdown()
+    shutdownComplete = true
+    dialog.showErrorBox(`${APP_NAME} could not open its window`, errorMessage(error))
+    app.quit()
+    return
+  }
+
   trayController.update(controller.getState())
+  controller.startAdvisories()
   updateManager.initialize()
 
+  powerMonitor.on('resume', onResume)
   app.on('second-instance', () => trayWindow.show(trayController.tray))
   app.on('activate', () => trayWindow.show(trayController.tray))
   app.on('before-quit', (event) => {

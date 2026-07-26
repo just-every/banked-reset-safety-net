@@ -36,10 +36,12 @@ export class TrayWindow {
     this.browserWindow.on('blur', () => {
       if (!this.browserWindow.webContents.isDevToolsOpened()) this.browserWindow.hide()
     })
+  }
 
+  async load(): Promise<void> {
     const rendererUrl = process.env.ELECTRON_RENDERER_URL
-    if (rendererUrl) void this.browserWindow.loadURL(rendererUrl)
-    else void this.browserWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+    if (rendererUrl) await this.browserWindow.loadURL(rendererUrl)
+    else await this.browserWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 
   toggle(tray: Tray): void {
