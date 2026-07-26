@@ -1,14 +1,21 @@
-import type { CreditUsePlan } from './usage'
+import type { CreditUsePlan } from './creditPlanning'
+import type { ResetHistoryEvent } from './resetHistory'
 import type { UsageWindow } from './types'
 
 const DAY_SECONDS = 86_400
 const MINIMUM_HORIZON_DAYS = 28
 
-export type ResetCalendarEventKind = 'scheduled' | 'banked-use' | 'banked-expiry'
+export type ResetCalendarEventKind =
+  | 'scheduled'
+  | 'banked-use'
+  | 'banked-expiry'
+  | 'observed-reset'
+  | 'banked-reset'
 
 export interface ResetCalendarEvent {
   kind: ResetCalendarEventKind
   timestamp: number
+  historyEvent: ResetHistoryEvent | null
 }
 
 export interface ResetCalendarDay {
@@ -28,17 +35,21 @@ export interface ResetCalendarModel {
 export function buildResetCalendar(
   usageWindow: UsageWindow | null,
   plans: CreditUsePlan[],
-  nowSeconds: number
+  nowSeconds: number,
+  history: ResetHistoryEvent[] = [],
+  focusSeconds?: number
 ): ResetCalendarModel {
   const latestExpiry = Math.max(
     nowSeconds + MINIMUM_HORIZON_DAYS * DAY_SECONDS,
     ...plans.map((plan) => plan.credit.expiresAt ?? nowSeconds)
   )
-  const start = startOfLocalWeek(nowSeconds)
-  const end = endOfLocalWeek(latestExpiry)
+  const start =
+    focusSeconds === undefined ? startOfLocalWeek(nowSeconds) : startOfCalendarMonth(focusSeconds)
+  const end =
+    focusSeconds === undefined ? endOfLocalWeek(latestExpiry) : endOfCalendarMonth(focusSeconds)
   const todayKey = localDateKey(nowSeconds)
-  const focusMonth = new Date(nowSeconds * 1_000).getMonth()
-  const events = collectEvents(usageWindow, plans, start, end)
+  const focusDate = new Date((focusSeconds ?? nowSeconds) * 1_000)
+  const events = collectEvents(usageWindow, plans, history, nowSeconds, start, end)
   const days: ResetCalendarDay[] = []
 
   for (let cursor = start; cursor <= end; cursor = addLocalDays(cursor, 1)) {
@@ -49,27 +60,41 @@ export function buildResetCalendar(
       timestamp: cursor,
       dayOfMonth: date.getDate(),
       isToday: key === todayKey,
-      isOutsideFocusMonth: date.getMonth() !== focusMonth,
+      isOutsideFocusMonth:
+        date.getMonth() !== focusDate.getMonth() ||
+        date.getFullYear() !== focusDate.getFullYear(),
       events: events.get(key) ?? []
     })
   }
 
-  return { label: calendarRangeLabel(start, end), days }
+  return {
+    label:
+      focusSeconds === undefined
+        ? calendarRangeLabel(start, end)
+        : new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(focusDate),
+    days
+  }
 }
 
 function collectEvents(
   usageWindow: UsageWindow | null,
   plans: CreditUsePlan[],
+  history: ResetHistoryEvent[],
+  nowSeconds: number,
   start: number,
   end: number
 ): Map<string, ResetCalendarEvent[]> {
   const events = new Map<string, ResetCalendarEvent[]>()
-  const add = (kind: ResetCalendarEventKind, timestamp: number): void => {
+  const add = (
+    kind: ResetCalendarEventKind,
+    timestamp: number,
+    historyEvent: ResetHistoryEvent | null = null
+  ): void => {
     if (timestamp < start || timestamp > end + DAY_SECONDS) return
     const key = localDateKey(timestamp)
     const dayEvents = events.get(key) ?? []
     if (!dayEvents.some((event) => event.kind === kind && event.timestamp === timestamp)) {
-      dayEvents.push({ kind, timestamp })
+      dayEvents.push({ kind, timestamp, historyEvent })
       dayEvents.sort((left, right) => left.timestamp - right.timestamp)
       events.set(key, dayEvents)
     }
@@ -83,17 +108,35 @@ function collectEvents(
         resetAt += Math.ceil((start - resetAt) / intervalSeconds) * intervalSeconds
       }
       for (; resetAt <= end + DAY_SECONDS; resetAt += intervalSeconds) {
-        add('scheduled', resetAt)
+        if (resetAt >= nowSeconds) add('scheduled', resetAt)
       }
     }
   }
 
   for (const plan of plans) {
-    add('banked-use', plan.recommendedAt)
-    if (plan.credit.expiresAt !== null) add('banked-expiry', plan.credit.expiresAt)
+    if (plan.recommendedAt >= nowSeconds) add('banked-use', plan.recommendedAt)
+    if (plan.credit.expiresAt !== null && plan.credit.expiresAt >= nowSeconds) {
+      add('banked-expiry', plan.credit.expiresAt)
+    }
   }
 
+  for (const event of history) add(event.kind, event.occurredAt / 1_000, event)
+
   return events
+}
+
+function startOfCalendarMonth(timestamp: number): number {
+  const date = new Date(timestamp * 1_000)
+  date.setDate(1)
+  date.setHours(0, 0, 0, 0)
+  return startOfLocalWeek(date.getTime() / 1_000)
+}
+
+function endOfCalendarMonth(timestamp: number): number {
+  const date = new Date(timestamp * 1_000)
+  date.setMonth(date.getMonth() + 1, 0)
+  date.setHours(0, 0, 0, 0)
+  return endOfLocalWeek(date.getTime() / 1_000)
 }
 
 function startOfLocalWeek(timestamp: number): number {

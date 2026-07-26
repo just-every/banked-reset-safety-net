@@ -6,8 +6,8 @@
 
 .profile-status-row {
   display: grid;
-  grid-template-columns: minmax(145px, 1.35fr) 72px minmax(120px, 1fr) 108px 12px;
-  min-height: 42px;
+  grid-template-columns: minmax(135px, 0.9fr) minmax(235px, 1.6fr) 108px 12px;
+  min-height: 54px;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -34,8 +34,6 @@
 }
 
 .profile-status-identity,
-.profile-status-usage,
-.profile-status-pace,
 .profile-status-reset {
   display: flex;
   min-width: 0;
@@ -66,8 +64,7 @@
   letter-spacing: 0.05em;
 }
 
-.profile-status-usage strong,
-.profile-status-pace strong,
+.profile-status-overview strong,
 .profile-status-reset strong {
   color: #d9dce2;
   font-size: 9px;
@@ -81,21 +78,78 @@
   white-space: nowrap;
 }
 
-.profile-status-pace {
+.profile-status-overview {
   display: grid;
-  gap: 2px;
+  min-width: 0;
+  gap: 6px;
 }
 
-.profile-status-pace.is-over strong {
+.profile-status-overview-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.profile-status-overview-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-status-overview.is-over strong {
   color: #e5a16b;
 }
 
-.profile-status-pace.is-under strong {
+.profile-status-overview.is-under strong {
   color: #8caee8;
 }
 
-.profile-status-pace.is-on-pace strong {
+.profile-status-overview.is-on-pace strong {
   color: #77c99e;
+}
+
+.profile-status-progress {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  height: 7px;
+  border-radius: 99px;
+  background: #272d36;
+}
+
+.profile-status-time-elapsed,
+.profile-status-usage-progress,
+.profile-status-time-marker {
+  position: absolute;
+  left: 0;
+}
+
+.profile-status-time-elapsed {
+  top: 0;
+  bottom: 0;
+  background: #3b424d;
+}
+
+.profile-status-usage-progress {
+  bottom: 0;
+  height: 2px;
+  background: #77c99e;
+}
+
+.profile-status-overview.is-over .profile-status-usage-progress {
+  background: #e5a16b;
+}
+
+.profile-status-overview.is-under .profile-status-usage-progress {
+  background: #8caee8;
+}
+
+.profile-status-time-marker {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #c8ccd3;
+  box-shadow: 0 0 0 1px rgba(17, 21, 28, 0.45);
 }
 
 .profile-status-reset {
@@ -106,7 +160,7 @@
 }
 
 .profile-status-unavailable {
-  grid-column: 2 / 5;
+  grid-column: 2 / 4;
   color: #757c87;
   font-size: 8px;
 }

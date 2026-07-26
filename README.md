@@ -14,12 +14,16 @@ and ARM64.
 
 The status view focuses on one tracked Codex home at a time. Compact selectable rows keep every
 home visible with its current percentage used, over/on/under-pace state, pace delta, and next
-normal-reset countdown. The active home then gets a large exact countdown before its usage gauge.
+scheduled-reset countdown. When automatic use is enabled, an earlier banked-reset safety cutoff
+takes priority over the normal reset. The active home then gets a large exact countdown before its
+usage gauge.
 
 <img src="docs/screenshots/usage-rhythm-overview.png" width="720" alt="Banked Reset Safety Net usage rhythm overview">
 
-The center is a local-time calendar. Natural scheduled resets, recommended banked-reset use dates,
-and final expiries use distinct markers, with exact banked timing and safety margins directly below.
+The center is a browsable local-time calendar. OpenAI-applied resets, confirmed banked-reset uses,
+future scheduled resets, recommended banked-reset use dates, and final expiries use distinct
+markers. A durable recent-history list keeps exact times and records schedule movement directly
+below the calendar.
 
 <img src="docs/screenshots/usage-rhythm-calendar.png" width="720" alt="Banked Reset Safety Net reset calendar and banked-reset schedule">
 
@@ -48,8 +52,10 @@ Windows artifacts are not yet Authenticode signed, so Microsoft SmartScreen may 
 Place `SHA256SUMS.txt` beside the downloaded assets and run `shasum -a 256 -c SHA256SUMS.txt`
 on macOS (or `sha256sum -c SHA256SUMS.txt` on Linux) to verify them.
 
-Banked Reset Safety Net runs in the menu bar without a Dock icon. Click its icon/countdown once to open the
-window; right-click for Refresh and Quit.
+Banked Reset Safety Net runs in the menu bar without a Dock icon. Its countdown follows the next
+actual reset across connected homes: either a normal usage-window reset or, when automatic use is
+enabled, a banked reset's configured safety cutoff. It does not count down to a credit expiry.
+Click its icon/countdown once to open the window; right-click for Refresh and Quit.
 
 ## First run
 
@@ -84,9 +90,12 @@ shows only the standard Codex window, keeping model-specific buckets such as GPT
 the menu-bar view. The rhythm view reports:
 
 - percent used and percent remaining;
-- an at-a-glance status row for every tracked Codex home;
+- an at-a-glance status row for every tracked Codex home whose usage is available;
+- a comparison bar showing actual usage against elapsed window time, with the remaining track
+  showing the distance to the normal reset;
 - the window length supplied by Codex;
-- the exact normal reset time and a live countdown; and
+- the exact next scheduled reset and a live countdown, distinguishing normal resets from automatic
+  banked-reset safety cutoffs; and
 - a time-based pace status.
 
 For a window of duration `D` ending at `R`, Banked Reset Safety Net derives the start as `R − D`. The expected
@@ -97,22 +106,32 @@ the middle band is **On pace**.
 Pace is an explanatory comparison, not a guarantee about future demand. The projected full-usage
 point assumes the current average rate continues. It is recalculated from each read-only refresh.
 
-## Banked-reset planning
+## Reset history and banked-reset planning
 
-The reset calendar begins on a local Monday and extends through the last banked expiry. It plots the
-normal reset interval supplied by Codex, each banked recommendation, and each final expiry without
-inventing dates when Codex has not supplied a usable interval. For each available reset it also
-shows:
+Each successful read-only refresh observes the standard Codex reset-window boundary used by the
+status view. Model-specific rolling buckets are excluded. For a window ending at `R` with duration
+`D`, the applied reset time is `R − D`. The first refresh records
+the active window boundary, so the latest reset can be backfilled even if it happened while the app
+was closed. Later boundary changes are appended to `reset-history.json` with the previous and new
+schedule. Confirmed automatic banked-reset uses remain sourced from `automation-ledger.json`, which
+provides their exact credit identity and completion time. The app never invents unobserved resets.
+
+The reset calendar is navigable by month. It plots durable applied history, the normal reset
+interval supplied by Codex, each banked recommendation, and each final expiry without inventing
+dates when Codex has not supplied a usable interval. Banked recommendations are spaced
+between the surrounding hard resets, with multiple credits divided across the interval and each
+credit's safety cutoff treated as a hard deadline. For each available reset it also shows:
 
 - the expiry timestamp and countdown;
 - `expiry − configured lead time` as the latest safe use-by point; and
-- an earlier **Best use** point when the current constant-rate projection reaches full usage before
-  the natural normal reset.
+- a separate **Best use** point that balances the time between resets, or uses the current
+  constant-rate exhaustion projection when it comes first.
 
-Only the earliest banked reset can use that current-window projection. Later credits retain their
-own use-by points, so multiple credits remain separate and visible. A best-use suggestion is
-advisory: it never changes the automatic-use schedule. If automation is enabled, the app still acts
-only at the configured use-by point inside the final 60 minutes.
+Only the earliest banked reset can use the current-window projection. Later credits are balanced
+inside the normal reset interval containing their deadlines, and move earlier when necessary to
+leave room for another credit. A best-use suggestion is advisory: it never changes the
+automatic-use schedule. If automation is enabled, the app still acts only at the configured use-by
+point inside the final 60 minutes.
 
 ## How it talks to Codex
 
@@ -152,6 +171,9 @@ the original directory:
 
 - macOS: `~/Library/Application Support/Reset Net/`
 - Windows: `%APPDATA%\Reset Net\`
+
+That directory contains `reset-history.json` for observed usage-window boundaries and
+`automation-ledger.json` for guarded banked-reset attempts and confirmed uses.
 
 ## Development
 
@@ -209,7 +231,8 @@ publishes a GitHub release only after every artifact and the macOS security chec
 - development and built macOS tray UI through the real accessibility tree
 - isolated first-run UI with automatic use off across automatically discovered Codex homes
 - renderer sandbox, context isolation, CommonJS preload bridge, and CSP
-- fourteen test files / forty-six tests, including pacing, calendar layout, display filtering,
+- sixteen test files / fifty-six tests, including pacing, calendar layout, reset-history
+  persistence, banked-history deduplication, display filtering,
   exact-credit, one-hour, lock,
   fail-closed ledger, no-auto-use, and single-click tray cases
 - deterministic macOS and Windows icons generated from the checked-in logo source

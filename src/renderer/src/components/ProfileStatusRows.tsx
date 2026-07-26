@@ -1,4 +1,5 @@
 import { formatCountdown } from '../../../shared/time'
+import { findNextScheduledResetForProfile } from '../../../shared/resetSchedule'
 import {
   calculateUsagePace,
   formatUsagePaceDifference,
@@ -56,6 +57,9 @@ function ProfileStatusRow({
   const usageWindow =
     runtime.status === 'ready' ? selectPlanningLimit(runtime.usageLimits)?.primary ?? null : null
   const pace = usageWindow ? calculateUsagePace(usageWindow, now / 1_000) : null
+  const nextReset = findNextScheduledResetForProfile(runtime, profile, now / 1_000)
+  const usedPercent = clampPercent(usageWindow?.usedPercent ?? 0)
+  const elapsedPercent = clampPercent(pace?.expectedUsedPercent ?? 0)
 
   return (
     <button
@@ -72,19 +76,42 @@ function ProfileStatusRow({
       </span>
       {usageWindow && pace ? (
         <>
-          <span className="profile-status-usage">
-            <strong>{formatUsagePercent(usageWindow.usedPercent)}</strong>
-            <small>used</small>
-          </span>
-          <span className={`profile-status-pace is-${pace.status}`}>
-            <strong>{usagePaceLabel(pace.status)}</strong>
-            <small>{formatUsagePaceDifference(pace.differencePercentagePoints)}</small>
+          <span className={`profile-status-overview is-${pace.status}`}>
+            <span className="profile-status-overview-copy">
+              <strong>{formatUsagePercent(usageWindow.usedPercent)} used</strong>
+              <small>
+                {usagePaceLabel(pace.status)} ·{' '}
+                {formatUsagePaceDifference(pace.differencePercentagePoints)}
+              </small>
+            </span>
+            <span
+              className="profile-status-progress"
+              role="img"
+              aria-label={`${formatUsagePercent(usedPercent)} used; ${formatUsagePercent(
+                elapsedPercent
+              )} of the reset window elapsed`}
+            >
+              <span
+                className="profile-status-time-elapsed"
+                style={{ width: `${elapsedPercent}%` }}
+              />
+              <span
+                className="profile-status-usage-progress"
+                style={{ width: `${usedPercent}%` }}
+              />
+              <span
+                className="profile-status-time-marker"
+                style={{ left: `${elapsedPercent}%` }}
+              />
+            </span>
           </span>
           <span className="profile-status-reset">
             <strong>
-              {usageWindow.resetsAt ? formatCountdown(usageWindow.resetsAt, now) : 'Unavailable'}
+              {nextReset ? formatCountdown(nextReset.occursAt, now) : 'Unavailable'}
             </strong>
-            <small>next reset</small>
+            <small>
+              {nextReset?.kind === 'banked' ? 'next banked reset' : 'next normal reset'}
+            </small>
           </span>
         </>
       ) : (
@@ -103,4 +130,8 @@ function ProfileStatusRow({
       </span>
     </button>
   )
+}
+
+function clampPercent(value: number): number {
+  return Math.min(100, Math.max(0, value))
 }

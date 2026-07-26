@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildResetCalendar } from '../src/shared/resetCalendar'
-import type { CreditUsePlan } from '../src/shared/usage'
+import type { CreditUsePlan } from '../src/shared/creditPlanning'
 import type { UsageWindow } from '../src/shared/types'
 
 describe('reset calendar', () => {
@@ -42,6 +42,28 @@ describe('reset calendar', () => {
       calendar.days.flatMap(({ events }) => events).map(({ kind }) => kind)
     ).toEqual(['banked-use', 'banked-expiry'])
   })
+
+  it('shows durable applied and banked history on a browsable month', () => {
+    const now = localSeconds(2026, 6, 22, 12)
+    const observedAt = localSeconds(2026, 6, 21, 20)
+    const bankedAt = localSeconds(2026, 5, 18, 10)
+    const history = [
+      historyEvent('observed-reset', observedAt),
+      historyEvent('banked-reset', bankedAt)
+    ]
+
+    const july = buildResetCalendar(null, [], now, history, now)
+    expect(july.label).toContain('July')
+    expect(july.days.find(day(2026, 6, 21))?.events.map(({ kind }) => kind)).toEqual([
+      'observed-reset'
+    ])
+
+    const june = buildResetCalendar(null, [], now, history, bankedAt)
+    expect(june.label).toContain('June')
+    expect(june.days.find(day(2026, 5, 18))?.events.map(({ kind }) => kind)).toEqual([
+      'banked-reset'
+    ])
+  })
 })
 
 function localSeconds(
@@ -76,5 +98,24 @@ function creditPlan(recommendedAt: number, expiresAt: number): CreditUsePlan {
     recommendedAt,
     recommendation: 'use-by',
     normalResetsBeforeUse: 1
+  }
+}
+
+function historyEvent(kind: 'observed-reset' | 'banked-reset', occurredAt: number) {
+  return {
+    id: `${kind}:${occurredAt}`,
+    profileId: 'profile-1',
+    kind,
+    occurredAt: occurredAt * 1_000,
+    recordedAt: occurredAt * 1_000,
+    creditId: kind === 'banked-reset' ? 'credit-1' : null,
+    bankedOutcome: kind === 'banked-reset' ? ('reset' as const) : null,
+    usageLimitId: kind === 'observed-reset' ? 'codex' : null,
+    usageWindow: kind === 'observed-reset' ? ('primary' as const) : null,
+    windowDurationMinutes: kind === 'observed-reset' ? 10_080 : null,
+    usedPercentBefore: null,
+    usedPercentAfter: kind === 'observed-reset' ? 0 : null,
+    previousResetsAt: null,
+    nextResetsAt: null
   }
 }

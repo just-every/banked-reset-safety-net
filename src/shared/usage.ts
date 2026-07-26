@@ -1,4 +1,4 @@
-import type { ResetCredit, UsageLimit, UsageWindow } from './types'
+import type { UsageLimit, UsageWindow } from './types'
 
 export const PACE_TOLERANCE_PERCENTAGE_POINTS = 5
 
@@ -11,14 +11,6 @@ export interface UsagePace {
   status: UsagePaceStatus
   windowStartsAt: number | null
   projectedExhaustionAt: number | null
-}
-
-export interface CreditUsePlan {
-  credit: ResetCredit
-  useByAt: number
-  recommendedAt: number
-  recommendation: 'projected-exhaustion' | 'use-by'
-  normalResetsBeforeUse: number
 }
 
 export function calculateUsagePace(window: UsageWindow, nowSeconds: number): UsagePace {
@@ -58,56 +50,6 @@ export function selectPlanningLimit(limits: UsageLimit[]): UsageLimit | null {
 
 export function displayUsageLimits(limits: UsageLimit[]): UsageLimit[] {
   return limits.filter((limit) => limit.id === 'codex')
-}
-
-export function buildCreditUsePlans(
-  credits: ResetCredit[],
-  usageWindow: UsageWindow | null,
-  leadTimeMinutes: number,
-  nowSeconds: number
-): CreditUsePlan[] {
-  const pace = usageWindow ? calculateUsagePace(usageWindow, nowSeconds) : null
-  const durationSeconds = (usageWindow?.windowDurationMinutes ?? 0) * 60
-  const normalResetAt = usageWindow?.resetsAt ?? null
-  const projectedExhaustionAvailable =
-    pace?.projectedExhaustionAt !== null &&
-    pace?.projectedExhaustionAt !== undefined &&
-    normalResetAt !== null &&
-    pace.projectedExhaustionAt > nowSeconds &&
-    pace.projectedExhaustionAt < normalResetAt
-
-  return credits
-    .filter(
-      (credit) =>
-        credit.status === 'available' &&
-        credit.resetType === 'codexRateLimits' &&
-        credit.expiresAt !== null
-    )
-    .sort(
-      (left, right) =>
-        (left.expiresAt ?? Number.POSITIVE_INFINITY) -
-        (right.expiresAt ?? Number.POSITIVE_INFINITY)
-    )
-    .map((credit, index) => {
-      const useByAt = (credit.expiresAt as number) - leadTimeMinutes * 60
-      const projectedExhaustion = pace?.projectedExhaustionAt ?? null
-      const useProjection =
-        index === 0 &&
-        projectedExhaustionAvailable &&
-        projectedExhaustion !== null &&
-        projectedExhaustion <= useByAt
-      const recommendedAt = useProjection ? projectedExhaustion : useByAt
-      return {
-        credit,
-        useByAt,
-        recommendedAt,
-        recommendation: useProjection ? 'projected-exhaustion' : 'use-by',
-        normalResetsBeforeUse:
-          normalResetAt !== null && durationSeconds > 0 && recommendedAt >= normalResetAt
-            ? Math.floor((recommendedAt - normalResetAt) / durationSeconds) + 1
-            : 0
-      }
-    })
 }
 
 export function formatUsageWindowDuration(minutes: number | null): string {

@@ -5,6 +5,7 @@ import { APP_NAME, LEGACY_USER_DATA_DIRECTORY } from '../shared/branding'
 import { IPC_CHANNELS } from '../shared/ipc'
 import { AutomationLedger } from './automation/automationLedger'
 import { RedemptionLock } from './automation/redemptionLock'
+import { ResetHistoryStore } from './history/resetHistoryStore'
 import { registerIpcHandlers } from './ipc'
 import { ResetController } from './resetController'
 import { SettingsStore } from './settings/settingsStore'
@@ -34,10 +35,12 @@ async function startApplication(): Promise<void> {
   const userData = app.getPath('userData')
   const settings = new SettingsStore(path.join(userData, 'settings.json'))
   const ledger = new AutomationLedger(path.join(userData, 'automation-ledger.json'))
+  const resetHistory = new ResetHistoryStore(path.join(userData, 'reset-history.json'))
   const redemptionLock = new RedemptionLock(path.join(userData, 'redemption-locks'))
   const controller = new ResetController({
     settings,
     ledger,
+    resetHistory,
     redemptionLock,
     notify: ({ title, body }) => {
       if (Notification.isSupported()) new Notification({ title, body }).show()

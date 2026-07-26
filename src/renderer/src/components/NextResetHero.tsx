@@ -1,4 +1,5 @@
 import { formatCountdown, formatLocalDateTime } from '../../../shared/time'
+import type { ScheduledReset } from '../../../shared/resetSchedule'
 import {
   calculateUsagePace,
   formatUsagePaceDifference,
@@ -9,25 +10,27 @@ import type { UsageWindow } from '../../../shared/types'
 
 interface NextResetHeroProps {
   window: UsageWindow
+  reset: ScheduledReset | null
   now: number
 }
 
-export function NextResetHero({ window, now }: NextResetHeroProps): React.JSX.Element {
+export function NextResetHero({ window, reset, now }: NextResetHeroProps): React.JSX.Element {
   const pace = calculateUsagePace(window, now / 1_000)
+  const resetKind = reset?.kind === 'banked' ? 'banked' : 'normal'
 
   return (
-    <section className="next-reset-hero" aria-label="Next normal usage reset">
+    <section className="next-reset-hero" aria-label={`Next ${resetKind} reset`}>
       <div className="next-reset-label">
         <span className="next-reset-clock" aria-hidden="true" />
-        Next reset in
+        Next {resetKind} reset in
       </div>
-      {window.resetsAt ? (
+      {reset ? (
         <>
           <strong className="next-reset-countdown" aria-live="off">
-            {formatCountdown(window.resetsAt, now)}
+            {formatCountdown(reset.occursAt, now)}
           </strong>
-          <time dateTime={new Date(window.resetsAt * 1_000).toISOString()}>
-            {formatLocalDateTime(window.resetsAt)}
+          <time dateTime={new Date(reset.occursAt * 1_000).toISOString()}>
+            {formatLocalDateTime(reset.occursAt)}
           </time>
         </>
       ) : (

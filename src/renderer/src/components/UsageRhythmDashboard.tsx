@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { buildResetCalendar } from '../../../shared/resetCalendar'
+import { buildCreditUsePlans } from '../../../shared/creditPlanning'
+import { findNextScheduledResetForProfile } from '../../../shared/resetSchedule'
 import { formatCompactLocalDateTime } from '../../../shared/time'
-import { buildCreditUsePlans, calculateUsagePace, selectPlanningLimit } from '../../../shared/usage'
+import { calculateUsagePace, selectPlanningLimit } from '../../../shared/usage'
 import type { AppViewState, ProfileRuntimeState, ProfileSettings } from '../../../shared/types'
 import { BankedResetList } from './BankedResetList'
 import { NextResetHero } from './NextResetHero'
@@ -31,12 +32,20 @@ export function UsageRhythmDashboard({
     const runtime = state.profiles.find((candidate) => candidate.profileId === profile.id)
     return runtime && profile.enabled ? [{ profile, runtime }] : []
   })
-  const preferred = pairs.find(({ runtime }) => runtime.status === 'ready') ?? pairs[0]
+  const overviewPairs = pairs.filter(
+    ({ runtime }) =>
+      runtime.status === 'ready' && selectPlanningLimit(runtime.usageLimits) !== null
+  )
+  const preferred = overviewPairs[0]
   const [selectedId, setSelectedId] = useState(preferred?.profile.id ?? '')
-  const selected = pairs.find(({ profile }) => profile.id === selectedId) ?? preferred
+  const selected = overviewPairs.find(({ profile }) => profile.id === selectedId) ?? preferred
 
   if (!selected) {
-    return <section className="rhythm-message">No enabled Codex homes. Add one in Settings.</section>
+    return (
+      <section className="rhythm-message">
+        No connected Codex homes currently have usage available. Check them in Settings.
+      </section>
+    )
   }
 
   return (
@@ -53,18 +62,30 @@ export function UsageRhythmDashboard({
       </header>
 
       <ProfileStatusRows
-        items={pairs}
+        items={overviewPairs}
         selectedId={selected.profile.id}
         now={now}
         onSelect={setSelectedId}
       />
 
-      <SelectedProfileRhythm pair={selected} now={now} />
+      <SelectedProfileRhythm
+        pair={selected}
+        history={state.resetHistory.filter((event) => event.profileId === selected.profile.id)}
+        now={now}
+      />
     </div>
   )
 }
 
-function SelectedProfileRhythm({ pair, now }: { pair: ProfilePair; now: number }): React.JSX.Element {
+function SelectedProfileRhythm({
+  pair,
+  history,
+  now
+}: {
+  pair: ProfilePair
+  history: AppViewState['resetHistory']
+  now: number
+}): React.JSX.Element {
   const { profile, runtime } = pair
   if (runtime.status === 'loading') return <section className="rhythm-message">Checking Codex…</section>
   if (runtime.status === 'error') return <section className="rhythm-message is-error">{runtime.error}</section>
@@ -75,20 +96,20 @@ function SelectedProfileRhythm({ pair, now }: { pair: ProfilePair; now: number }
     return <section className="rhythm-message">Codex did not supply its normal usage window.</section>
   }
 
+  const nextReset = findNextScheduledResetForProfile(runtime, profile, now / 1_000)
   const plans = buildCreditUsePlans(
     runtime.credits,
     usageWindow,
     profile.leadTimeMinutes,
     now / 1_000
   )
-  const calendar = buildResetCalendar(usageWindow, plans, now / 1_000)
   const pace = calculateUsagePace(usageWindow, now / 1_000)
 
   return (
     <>
-      <NextResetHero window={usageWindow} now={now} />
+      <NextResetHero window={usageWindow} reset={nextReset} now={now} />
       <UsageRhythmGauge window={usageWindow} now={now} />
-      <ResetCalendar calendar={calendar} />
+      <ResetCalendar usageWindow={usageWindow} plans={plans} history={history} now={now} />
       <BankedResetList
         plans={plans}
         leadTimeMinutes={profile.leadTimeMinutes}

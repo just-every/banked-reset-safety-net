@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { buildCreditUsePlans } from '../src/shared/creditPlanning'
 import {
-  buildCreditUsePlans,
   calculateUsagePace,
   displayUsageLimits,
   formatUsagePaceDifference,
@@ -31,11 +31,10 @@ describe('usage pacing and reset planning', () => {
     expect(calculateUsagePace({ ...window, usedPercent: 10 }, 5_500).status).toBe('under')
   })
 
-  it('uses one projected exhaustion before falling back to each credit use-by time', () => {
-    const fastWindow = { ...window, usedPercent: 50 }
+  it('uses projected exhaustion for the earliest credit when the current usage will run out', () => {
     const plans = buildCreditUsePlans(
-      [credit('first', 20_000), credit('second', 30_000)],
-      fastWindow,
+      [credit('first', 9_000), credit('second', 21_800)],
+      { ...window, usedPercent: 50 },
       30,
       5_500
     )
@@ -43,26 +42,58 @@ describe('usage pacing and reset planning', () => {
     expect(plans[0]).toMatchObject({
       recommendedAt: 7_000,
       recommendation: 'projected-exhaustion',
-      useByAt: 18_200,
+      useByAt: 7_200,
       normalResetsBeforeUse: 0
     })
     expect(plans[1]).toMatchObject({
-      recommendedAt: 28_200,
-      recommendation: 'use-by',
-      normalResetsBeforeUse: 4
+      recommendedAt: 19_000,
+      recommendation: 'balanced-spacing',
+      normalResetsBeforeUse: 2
     })
   })
 
-  it('never transfers the current-window projection to a later credit', () => {
+  it('balances multiple banked resets inside the hard-reset interval containing their deadlines', () => {
     const plans = buildCreditUsePlans(
-      [credit('first', 8_500), credit('second', 20_000)],
-      { ...window, usedPercent: 50 },
+      [credit('first', 12_060), credit('second', 15_060), credit('third', 21_060)],
+      window,
+      1,
+      5_500
+    )
+
+    expect(plans).toMatchObject([
+      { useByAt: 12_000, recommendedAt: 12_000, recommendation: 'use-by' },
+      { useByAt: 15_000, recommendedAt: 14_000, recommendation: 'balanced-spacing' },
+      { useByAt: 21_000, recommendedAt: 19_000, recommendation: 'balanced-spacing' }
+    ])
+  })
+
+  it('moves an earlier use to make room when two credits share a tight deadline', () => {
+    const plans = buildCreditUsePlans(
+      [credit('first', 13_060), credit('second', 13_060)],
+      window,
+      1,
+      5_500
+    )
+
+    expect(plans.map((plan) => plan.recommendedAt)).toEqual([11_500, 13_000])
+    expect(plans.map((plan) => plan.recommendation)).toEqual([
+      'balanced-spacing',
+      'use-by'
+    ])
+  })
+
+  it('falls back to the safety cutoff when Codex supplies no hard-reset interval', () => {
+    const plans = buildCreditUsePlans(
+      [credit('first', 20_000)],
+      { ...window, windowDurationMinutes: null },
       30,
       5_500
     )
 
-    expect(plans.map((plan) => plan.recommendation)).toEqual(['use-by', 'use-by'])
-    expect(plans[1].recommendedAt).toBe(18_200)
+    expect(plans[0]).toMatchObject({
+      recommendedAt: 18_200,
+      recommendation: 'use-by'
+    })
   })
 
   it('shows and plans from only the normal Codex limit', () => {

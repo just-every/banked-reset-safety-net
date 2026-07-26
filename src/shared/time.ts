@@ -1,38 +1,3 @@
-import type { ProfileRuntimeState, ResetCredit } from './types'
-
-export interface NextExpiringCredit {
-  profileId: string
-  credit: ResetCredit
-}
-
-export function findNextExpiringCredit(
-  profiles: ProfileRuntimeState[],
-  nowSeconds = Date.now() / 1000
-): NextExpiringCredit | null {
-  let next: NextExpiringCredit | null = null
-
-  for (const profile of profiles) {
-    if (profile.status !== 'ready') continue
-
-    for (const credit of profile.credits) {
-      if (
-        credit.status !== 'available' ||
-        credit.resetType !== 'codexRateLimits' ||
-        credit.expiresAt === null ||
-        credit.expiresAt <= nowSeconds
-      ) {
-        continue
-      }
-
-      if (next === null || credit.expiresAt < (next.credit.expiresAt ?? Number.POSITIVE_INFINITY)) {
-        next = { profileId: profile.profileId, credit }
-      }
-    }
-  }
-
-  return next
-}
-
 export function formatCountdown(expiresAtSeconds: number, nowMs = Date.now()): string {
   const remainingSeconds = Math.max(0, Math.ceil(expiresAtSeconds - nowMs / 1000))
   if (remainingSeconds === 0) return 'Expired'

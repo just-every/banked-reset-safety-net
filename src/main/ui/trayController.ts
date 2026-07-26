@@ -1,6 +1,7 @@
 import { Menu, Tray } from 'electron'
 import { APP_NAME } from '../../shared/branding'
-import { findNextExpiringCredit, formatTrayCountdown } from '../../shared/time'
+import { findNextScheduledReset } from '../../shared/resetSchedule'
+import { formatTrayCountdown } from '../../shared/time'
 import type { AppViewState } from '../../shared/types'
 import { createTrayIcon } from './trayIcon'
 import type { TrayWindow } from './trayWindow'
@@ -42,18 +43,24 @@ export class TrayController {
   }
 
   private updateCountdown(): void {
-    const next = this.state ? findNextExpiringCredit(this.state.profiles) : null
-    if (!next?.credit.expiresAt) {
+    const nowMs = Date.now()
+    const next = this.state
+      ? findNextScheduledReset(this.state.profiles, this.state.settings.profiles, nowMs / 1_000)
+      : null
+    if (!next) {
       if (process.platform === 'darwin') this.tray.setTitle('')
-      this.tray.setToolTip(`${APP_NAME} — no expiring reset found`)
+      this.tray.setToolTip(`${APP_NAME} — no upcoming reset found`)
       return
     }
 
-    const countdown = formatTrayCountdown(next.credit.expiresAt)
+    const countdown =
+      next.occursAt <= nowMs / 1_000 ? 'now' : formatTrayCountdown(next.occursAt, nowMs)
     if (process.platform === 'darwin') this.tray.setTitle(countdown ? ` ${countdown}` : '')
     const profile = this.state?.settings.profiles.find(
       (candidate) => candidate.id === next.profileId
     )
-    this.tray.setToolTip(`${APP_NAME} — ${profile?.name ?? 'Codex'} expires in ${countdown}`)
+    const resetKind = next.kind === 'banked' ? 'banked reset' : 'normal reset'
+    const timing = countdown === 'now' ? 'due now' : `in ${countdown}`
+    this.tray.setToolTip(`${APP_NAME} — ${profile?.name ?? 'Codex'} ${resetKind} ${timing}`)
   }
 }

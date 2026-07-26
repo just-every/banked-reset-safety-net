@@ -11,6 +11,8 @@ import {
   type AutomationNotification
 } from './automation/automationRunner'
 import { CodexSessionManager } from './codex/sessionManager'
+import { bankedResetHistory, combineResetHistory } from './history/bankedResetHistory'
+import { ResetHistoryStore } from './history/resetHistoryStore'
 import { ProfilePoller } from './resets/profilePoller'
 import { SettingsStore } from './settings/settingsStore'
 
@@ -20,6 +22,7 @@ const AUTOMATION_TICK_MS = 15 * 1_000
 interface ResetControllerOptions {
   settings: SettingsStore
   ledger: AutomationLedger
+  resetHistory: ResetHistoryStore
   redemptionLock: RedemptionLock
   notify: (notification: AutomationNotification) => void
   setLaunchAtLogin: (enabled: boolean) => void
@@ -50,7 +53,11 @@ export class ResetController {
   }
 
   async initialize(): Promise<void> {
-    await Promise.all([this.options.settings.initialize(), this.options.ledger.initialize()])
+    await Promise.all([
+      this.options.settings.initialize(),
+      this.options.ledger.initialize(),
+      this.options.resetHistory.initialize()
+    ])
     this.initialized = true
     const settings = this.options.settings.get()
     this.options.setLaunchAtLogin(settings.launchAtLogin)
@@ -74,6 +81,10 @@ export class ResetController {
       settings,
       profiles: this.poller.getStates(settings),
       events: this.options.ledger.getEvents(),
+      resetHistory: combineResetHistory(
+        this.options.resetHistory.getEvents(),
+        this.options.ledger.getRecords()
+      ),
       resolvedCodexExecutable: this.poller.getResolvedExecutable(),
       updatedAt: Date.now()
     }
@@ -86,6 +97,11 @@ export class ResetController {
 
   async refresh(): Promise<void> {
     await this.poller.refreshAll(this.options.settings.get())
+    const records = this.options.ledger.getRecords()
+    await this.options.resetHistory.observeProfiles(
+      this.poller.getStates(this.options.settings.get()),
+      bankedResetHistory(records)
+    )
     this.emit()
   }
 

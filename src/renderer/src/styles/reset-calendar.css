@@ -32,10 +32,30 @@
   margin-top: 4px;
 }
 
-.calendar-heading > strong {
+.calendar-navigation {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.calendar-navigation strong {
   color: #9ba1ab;
   font-size: 9px;
   font-weight: 450;
+}
+
+.calendar-navigation button {
+  border: 1px solid #303741;
+  border-radius: 4px;
+  color: #aeb4bd;
+  background: #20252c;
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.calendar-navigation .calendar-today {
+  font-size: 7px;
 }
 
 .calendar-icon {
@@ -78,6 +98,14 @@
 
 .calendar-legend .is-banked-use::before {
   background: #8c82d8;
+}
+
+.calendar-legend .is-observed-reset::before {
+  background: #70b79b;
+}
+
+.calendar-legend .is-banked-reset::before {
+  background: #d7b15f;
 }
 
 .calendar-legend .is-banked-expiry::before {
@@ -171,7 +199,98 @@
   background: rgba(124, 111, 206, 0.16);
 }
 
+.calendar-event.is-observed-reset {
+  color: #a7dbc7;
+  background: rgba(70, 153, 121, 0.17);
+}
+
+.calendar-event.is-banked-reset {
+  color: #efd493;
+  background: rgba(184, 137, 39, 0.18);
+}
+
 .calendar-event.is-banked-expiry {
   color: #e2b39f;
   background: rgba(178, 103, 76, 0.14);
+}
+
+.reset-history {
+  margin-top: 11px;
+  border-top: 1px solid #252b33;
+  padding-top: 10px;
+}
+
+.reset-history-heading,
+.reset-history-row {
+  display: flex;
+  align-items: center;
+}
+
+.reset-history-heading {
+  justify-content: space-between;
+  color: #aeb4bd;
+  font-size: 8px;
+}
+
+.reset-history-heading span,
+.reset-history-empty {
+  color: #6f7782;
+  font-size: 7px;
+}
+
+.reset-history-empty {
+  margin-top: 8px;
+}
+
+.reset-history-list {
+  display: grid;
+  gap: 1px;
+  margin-top: 6px;
+}
+
+.reset-history-row {
+  gap: 7px;
+  border-radius: 6px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.reset-history-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #70b79b;
+}
+
+.reset-history-row.is-banked-reset .reset-history-dot {
+  background: #d7b15f;
+}
+
+.reset-history-row > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.reset-history-row strong {
+  color: #c8ccd2;
+  font-size: 8px;
+  font-weight: 520;
+}
+
+.reset-history-row p,
+.reset-history-row time {
+  color: #747c87;
+  font-size: 7px;
+}
+
+.reset-history-row p {
+  overflow: hidden;
+  margin-top: 2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reset-history-row time {
+  flex: 0 0 auto;
 }

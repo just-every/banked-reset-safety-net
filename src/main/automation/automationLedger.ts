@@ -40,6 +40,10 @@ export class AutomationLedger {
     return record ? structuredClone(record) : null
   }
 
+  getRecords(): AutomationRecord[] {
+    return structuredClone(Object.values(this.requireData().records))
+  }
+
   getEvents(): AutomationEvent[] {
     return structuredClone(this.requireData().events)
   }

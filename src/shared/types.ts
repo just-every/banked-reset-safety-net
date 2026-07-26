@@ -94,6 +94,7 @@ export interface AppViewState {
   settings: AppSettings
   profiles: ProfileRuntimeState[]
   events: AutomationEvent[]
+  resetHistory: import('./resetHistory').ResetHistoryEvent[]
   resolvedCodexExecutable: string | null
   updatedAt: number
 }
