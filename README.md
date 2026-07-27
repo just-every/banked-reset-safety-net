@@ -5,7 +5,14 @@ usage-limit resets. It shows how much normal usage remains, when each normal win
 current use is ahead of or behind a time-based pace, and when every banked reset should be used
 before expiry.
 
-**Download latest:** [macOS universal DMG](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-mac-universal.dmg) · [Windows x64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-x64.exe) · [Windows ARM64](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-arm64.exe) · [Linux x64 AppImage](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-linux-x64.AppImage) · [Linux ARM64 AppImage](https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-linux-arm64.AppImage) · [all release files](https://github.com/just-every/banked-reset-safety-net/releases/latest)
+## Download the latest release
+
+| **macOS** | **Windows** | **Linux** |
+|:--|:--|:--|
+| [**Download universal DMG →**][download-macos] | [**Download x64 →**][download-windows-x64]<br>[Download ARM64 →][download-windows-arm64] | [**Download x64 AppImage →**][download-linux-x64]<br>[Download ARM64 AppImage →][download-linux-arm64] |
+| Signed, notarized, and ready for Apple silicon or Intel. | Native installers for x64 and ARM64 PCs. | Portable AppImages for x64 and ARM64 systems. |
+
+**[Checksums and all release files →][download-all]**
 
 The macOS version runs in the menu bar. The same Electron application is packaged for Windows and
 Linux on x64 and ARM64.
@@ -38,12 +45,14 @@ default 30 minutes. No reset-consumption request was made while capturing them.
 
 ## Install
 
-Signed builds are published on
-[GitHub Releases](https://github.com/just-every/banked-reset-safety-net/releases):
+### Download the latest release
 
-- macOS universal DMG or ZIP;
-- Windows x64 or ARM64 NSIS installer; or
-- Linux x64 or ARM64 AppImage.
+| **macOS** | **Windows** | **Linux** |
+|:--|:--|:--|
+| [**Download universal DMG →**][download-macos] | [**Download x64 →**][download-windows-x64]<br>[Download ARM64 →][download-windows-arm64] | [**Download x64 AppImage →**][download-linux-x64]<br>[Download ARM64 AppImage →][download-linux-arm64] |
+| Signed, notarized, and ready for Apple silicon or Intel. | Native installers for x64 and ARM64 PCs. | Portable AppImages for x64 and ARM64 systems. |
+
+**[Checksums and all release files →][download-all]**
 
 Published macOS builds are Developer ID signed, hardened, notarized by Apple, and verified with
 Gatekeeper before the release can be created. Open the DMG and drag Banked Reset Safety Net to
@@ -284,3 +293,10 @@ channel check, and macOS security check passes.
   warning, updater-channel, and architecture checks
 
 No live redemption was requested while implementing or testing v1.0.
+
+[download-macos]: https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-mac-universal.dmg
+[download-windows-x64]: https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-x64.exe
+[download-windows-arm64]: https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-win-arm64.exe
+[download-linux-x64]: https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-linux-x64.AppImage
+[download-linux-arm64]: https://github.com/just-every/banked-reset-safety-net/releases/latest/download/Banked-Reset-Safety-Net-linux-arm64.AppImage
+[download-all]: https://github.com/just-every/banked-reset-safety-net/releases/latest
