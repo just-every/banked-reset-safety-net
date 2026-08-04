@@ -53,17 +53,6 @@
     "vite": "7.3.6",
     "vitest": "4.1.10"
   },
-  "pnpm": {
-    "overrides": {
-      "fast-uri": "3.1.4"
-    },
-    "onlyBuiltDependencies": [
-      "electron",
-      "electron-winstaller",
-      "esbuild",
-      "sharp"
-    ]
-  },
   "build": {
     "appId": "net.bankedreset.app",
     "productName": "Banked Reset Safety Net",
