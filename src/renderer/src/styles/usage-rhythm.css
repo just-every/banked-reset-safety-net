@@ -95,6 +95,7 @@
 }
 
 .rhythm-message {
+  overflow-wrap: anywhere;
   margin-top: 14px;
   border: 1px solid #282e37;
   border-radius: 9px;
