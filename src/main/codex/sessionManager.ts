@@ -15,7 +15,7 @@ export class CodexSessionManager {
     profile: ProfileSettings,
     executable: string
   ): Promise<RateLimitsReadResult> {
-    return this.withSession(profile, executable, (session) => session.readRateLimits())
+    return this.withSession(profile, executable, (session) => session.readRateLimits(), true)
   }
 
   async readResetCredits(
@@ -69,13 +69,19 @@ export class CodexSessionManager {
   private async withSession<T>(
     profile: ProfileSettings,
     executable: string,
-    operation: (session: CodexSession) => Promise<T>
+    operation: (session: CodexSession) => Promise<T>,
+    discardOnError = false
   ): Promise<T> {
     const session = this.getOrCreate(profile, executable)
     try {
       return await operation(session)
     } catch (error) {
-      if (!session.isOpen()) this.sessions.delete(profile.id)
+      // A live app-server can retain expired credentials. Let the next usage
+      // refresh start a fresh process; never replay a redemption operation here.
+      if (discardOnError || !session.isOpen()) {
+        if (this.sessions.get(profile.id)?.session === session) this.sessions.delete(profile.id)
+        await session.close()
+      }
       throw error
     }
   }
