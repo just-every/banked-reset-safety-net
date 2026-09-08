@@ -39,14 +39,6 @@ export function UsageRhythmDashboard({
   const [selectedId, setSelectedId] = useState(preferred?.profile.id ?? '')
   const selected = overviewPairs.find(({ profile }) => profile.id === selectedId) ?? preferred
 
-  if (!selected) {
-    return (
-      <section className="rhythm-message">
-        No connected Codex homes currently have usage available. Check them in Settings.
-      </section>
-    )
-  }
-
   return (
     <div className="usage-rhythm-dashboard">
       <header className="rhythm-header">
@@ -55,25 +47,47 @@ export function UsageRhythmDashboard({
         </button>
         <div className="rhythm-title">
           <span className="rhythm-clock" aria-hidden="true" />
-          <h2>{selected.profile.name}</h2>
+          <h2>{selected?.profile.name ?? 'Codex usage'}</h2>
         </div>
         <p>Reset rhythm · normal usage and banked reset timing</p>
       </header>
 
-      <ProfileStatusRows
-        items={overviewPairs}
-        selectedId={selected.profile.id}
-        now={now}
-        onSelect={setSelectedId}
-      />
+      {pairs.filter(({ runtime }) => runtime.status !== 'ready').map(({ profile, runtime }) => (
+        <section
+          key={profile.id}
+          className={`rhythm-message${runtime.status === 'error' ? ' is-error' : ''}`}
+          role={runtime.status === 'error' ? 'alert' : 'status'}
+        >
+          <strong>{profile.name}</strong>
+          <p>{runtime.status === 'error'
+            ? runtime.error ?? 'Codex usage could not be read.'
+            : 'Checking Codex…'}</p>
+        </section>
+      ))}
 
-      <SelectedProfileRhythm
-        pair={selected}
-        history={state.resetHistory.filter((event) => event.profileId === selected.profile.id)}
-        expiryWarnings={state.expiryWarnings}
-        now={now}
-        onPrepareManualUse={onPrepareManualUse}
-      />
+      {pairs.length === 0 && (
+        <section className="rhythm-message">
+          No Codex homes are being tracked. Enable tracking in Settings.
+        </section>
+      )}
+
+      {selected && (
+        <>
+          <ProfileStatusRows
+            items={overviewPairs}
+            selectedId={selected.profile.id}
+            now={now}
+            onSelect={setSelectedId}
+          />
+          <SelectedProfileRhythm
+            pair={selected}
+            history={state.resetHistory.filter((event) => event.profileId === selected.profile.id)}
+            expiryWarnings={state.expiryWarnings}
+            now={now}
+            onPrepareManualUse={onPrepareManualUse}
+          />
+        </>
+      )}
     </div>
   )
 }

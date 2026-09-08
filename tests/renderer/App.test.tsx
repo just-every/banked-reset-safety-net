@@ -6,6 +6,7 @@ import type { AppViewState } from '../../src/shared/types'
 import {
   makeAppViewState,
   makeProfileRuntimeState,
+  makeProfileSettings,
   makeResetCredit,
   makeUpdateViewState
 } from './support/appViewState'
@@ -98,6 +99,47 @@ describe('App', () => {
     })
     await user.click(install)
     expect(bridge.installUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('shows a failed connection and keeps read-only refresh available with no ready profiles', async () => {
+    const bridge = installResetNetBridge(makeAppViewState({
+      profiles: [makeProfileRuntimeState({
+        status: 'error', usageLimits: [], error: '401 Unauthorized: token_expired'
+      })]
+    }))
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Primary')
+    expect(screen.getByRole('alert')).toHaveTextContent('401 Unauthorized: token_expired')
+    await user.click(screen.getByRole('button', { name: 'Refresh' }))
+    expect(bridge.refresh).toHaveBeenCalledOnce()
+    expect(bridge.prepareManualUse).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'Use now…' })).not.toBeInTheDocument()
+  })
+
+  it('shows failed profiles alongside a healthy profile', async () => {
+    const state = makeAppViewState()
+    state.settings.profiles.push(makeProfileSettings({ id: 'profile-2', name: 'Other home' }))
+    state.profiles.push(makeProfileRuntimeState({
+      profileId: 'profile-2', status: 'error', usageLimits: [], error: 'Sign-in expired'
+    }))
+    installResetNetBridge(state)
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Primary' })).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Other home')
+    expect(screen.getByRole('alert')).toHaveTextContent('Sign-in expired')
+  })
+
+  it('shows connection progress while usage is loading', async () => {
+    installResetNetBridge(makeAppViewState({
+      profiles: [makeProfileRuntimeState({ status: 'loading', usageLimits: [] })]
+    }))
+    render(<App />)
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Checking Codex…')
+    expect(screen.queryByText(/No connected Codex homes/)).not.toBeInTheDocument()
   })
 
   it('surfaces an action IPC error and lets the user dismiss it', async () => {
