@@ -51,7 +51,7 @@
     "tsx": "4.23.1",
     "typescript": "7.0.2",
     "vite": "7.3.6",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "build": {
     "appId": "net.bankedreset.app",
