@@ -53,6 +53,8 @@ function automaticCandidates(): string[] {
           path.join(homedir(), '.local', 'bin', 'codex'),
           '/opt/homebrew/bin/codex',
           '/usr/local/bin/codex',
+          // The new bundle's bin/codex entrypoint is a shell wrapper; use its native binary.
+          '/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex',
           '/Applications/ChatGPT.app/Contents/Resources/codex'
         ]
       : process.platform === 'win32'
